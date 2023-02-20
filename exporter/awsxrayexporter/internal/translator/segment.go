@@ -99,6 +99,8 @@ func MakeSegment(span ptrace.Span, resource pcommon.Resource, indexedAttrs []str
 		return nil, err
 	}
 
+	attributes := span.Attributes()
+
 	var (
 		startTime                                          = timestampToFloatSeconds(span.StartTimestamp())
 		endTime                                            = timestampToFloatSeconds(span.EndTimestamp())
@@ -108,14 +110,12 @@ func MakeSegment(span ptrace.Span, resource pcommon.Resource, indexedAttrs []str
 		awsfiltered, aws                                   = makeAws(causefiltered, resource, logGroupNames)
 		service                                            = makeService(resource)
 		sqlfiltered, sql                                   = makeSQL(span, awsfiltered)
-		user, annotations, metadata                        = makeXRayAttributes(sqlfiltered, resource, storeResource, indexedAttrs, indexAllAttrs)
+		user, annotations, metadata                        = makeXRayAttributes(sqlfiltered, resource, storeResource, indexedAttrs, indexAllAttrs, attributes)
 		name                                               string
 		namespace                                          string
 	)
 
 	// X-Ray segment names are service names, unlike span names which are methods. Try to find a service name.
-
-	attributes := span.Attributes()
 
 	// peer.service should always be prioritized for segment names when set because it is what the user decided.
 	if peerService, ok := attributes.Get(conventions.AttributePeerService); ok {
@@ -320,7 +320,7 @@ func timestampToFloatSeconds(ts pcommon.Timestamp) float64 {
 	return float64(ts) / float64(time.Second)
 }
 
-func makeXRayAttributes(attributes map[string]pcommon.Value, resource pcommon.Resource, storeResource bool, indexedAttrs []string, indexAllAttrs bool) (
+func makeXRayAttributes(attributes map[string]pcommon.Value, resource pcommon.Resource, storeResource bool, indexedAttrs []string, indexAllAttrs bool, unfilteredAttributes pcommon.Map) (
 	string, map[string]interface{}, map[string]map[string]interface{}) {
 	var (
 		annotations = map[string]interface{}{}
@@ -343,6 +343,13 @@ func makeXRayAttributes(attributes map[string]pcommon.Value, resource pcommon.Re
 	if !indexAllAttrs {
 		for _, name := range indexedAttrs {
 			indexedKeys[name] = true
+
+			// Allow indexing of attributes that have been filtered when explicitly listed
+			_a, okA := attributes[name]
+			_b, okB := unfilteredAttributes.Get(name)
+			if !okA && okB {
+				attributes[name] = _b
+			}
 		}
 	}
 
