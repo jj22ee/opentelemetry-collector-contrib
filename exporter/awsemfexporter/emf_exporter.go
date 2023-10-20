@@ -71,7 +71,8 @@ func newEmfExporter(config *Config, set exporter.CreateSettings) (*emfExporter, 
 		config.Tags,
 		session,
 		metadata.Type.String(),
-		cwlogs.WithEnabledPulseApm(isPulseApmEnabled(config)),
+		cwlogs.WithEnabledContainerInsights(config.IsEnhancedContainerInsights()),
+		cwlogs.WithEnabledPulseApm(config.IsPulseApmEnabled()),
 	)
 
 	collectorIdentifier, err := uuid.NewRandom()
@@ -213,16 +214,4 @@ func wrapErrorIfBadRequest(err error) error {
 		return consumererror.NewPermanent(err)
 	}
 	return err
-}
-
-func isPulseApmEnabled(config *Config) bool {
-	if config.LogGroupName == "" || config.Namespace == "" {
-		return false
-	}
-
-	if config.Namespace == pulseMetricNamespace && strings.HasPrefix(config.LogGroupName, pulseLogGroupNamePrefix) {
-		return true
-	}
-
-	return false
 }
