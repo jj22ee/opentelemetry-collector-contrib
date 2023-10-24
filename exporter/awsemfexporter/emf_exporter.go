@@ -29,9 +29,9 @@ const (
 	outputDestinationCloudWatch = "cloudwatch"
 	outputDestinationStdout     = "stdout"
 
-	// Pulse EMF config
-	pulseMetricNamespace    = "AWS/APM"
-	pulseLogGroupNamePrefix = "/aws/apm/"
+	// AppSignals EMF config
+	appSignalsMetricNamespace    = "AppSignals"
+	appSignalsLogGroupNamePrefix = "/aws/appsignals/"
 )
 
 type emfExporter struct {
@@ -71,7 +71,7 @@ func newEmfExporter(config *Config, set exporter.CreateSettings) (*emfExporter, 
 		config.Tags,
 		session,
 		metadata.Type.String(),
-		cwlogs.WithEnabledAppSignals(config.IsPulseApmEnabled()),
+		cwlogs.WithEnabledAppSignals(config.IsAppSignalsEnabled()),
 	)
 
 	collectorIdentifier, err := uuid.NewRandom()
