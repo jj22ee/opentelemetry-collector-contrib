@@ -15,5 +15,3 @@ tests:
     resource_to_telemetry_conversion:
       enabled: true
   expect_consumer_error: true
-  goleak:
-    skip: true
