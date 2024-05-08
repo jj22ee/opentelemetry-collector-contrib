@@ -68,7 +68,7 @@ func newCloudWatchLogClient(svc cloudwatchlogsiface.CloudWatchLogsAPI, logRetent
 }
 
 // NewClient create Client
-func NewClient(logger *zap.Logger, awsConfig *aws.Config, buildInfo component.BuildInfo, logGroupName string, logRetention int64, tags map[string]*string, sess *session.Session, opts ...UserAgentOption) *Client {
+func NewClient(logger *zap.Logger, awsConfig *aws.Config, buildInfo component.BuildInfo, logGroupName string, logRetention int64, tags map[string]*string, sess *session.Session, componentName string, opts ...UserAgentOption) *Client {
 	client := cloudwatchlogs.New(sess, awsConfig)
 	client.Handlers.Build.PushBackNamed(handler.NewRequestCompressionHandler([]string{"PutLogEvents"}, logger))
 	client.Handlers.Build.PushBackNamed(handler.RequestStructuredLogHandler)
@@ -82,7 +82,7 @@ func NewClient(logger *zap.Logger, awsConfig *aws.Config, buildInfo component.Bu
 		opt(option)
 	}
 
-	client.Handlers.Build.PushFrontNamed(newCollectorUserAgentHandler(buildInfo, logGroupName, option))
+	client.Handlers.Build.PushFrontNamed(newCollectorUserAgentHandler(buildInfo, logGroupName, componentName, option))
 	return newCloudWatchLogClient(client, logRetention, tags, logger)
 }
 
@@ -213,7 +213,7 @@ func (client *Client) CreateStream(logGroup, streamName *string) error {
 	return nil
 }
 
-func newCollectorUserAgentHandler(buildInfo component.BuildInfo, logGroupName string, userAgentFlag *UserAgentFlag) request.NamedHandler {
+func newCollectorUserAgentHandler(buildInfo component.BuildInfo, logGroupName string, componentName string, userAgentFlag *UserAgentFlag) request.NamedHandler {
 	extraStr := ""
 
 	switch {
@@ -225,7 +225,10 @@ func newCollectorUserAgentHandler(buildInfo component.BuildInfo, logGroupName st
 		extraStr = "AppSignals"
 	}
 
-	fn := request.MakeAddToUserAgentHandler(buildInfo.Command, buildInfo.Version, extraStr)
+	fn := request.MakeAddToUserAgentHandler(buildInfo.Command, buildInfo.Version, componentName)
+	if extraStr != "" {
+		fn = request.MakeAddToUserAgentHandler(buildInfo.Command, buildInfo.Version, componentName, extraStr)
+	}
 
 	return request.NamedHandler{
 		Name: "otel.collector.UserAgentHandler",
