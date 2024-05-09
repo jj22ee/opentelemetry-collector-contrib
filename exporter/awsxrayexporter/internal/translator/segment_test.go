@@ -399,9 +399,9 @@ func TestFixSegmentName(t *testing.T) {
 	validName := "EP @ test_15.testing-d\u00F6main.org#GO"
 	fixedName := fixSegmentName(validName)
 	assert.Equal(t, validName, fixedName)
-	invalidName := "<subDomain>.example.com"
+	invalidName := "<subDomain>.example.com,1413"
 	fixedName = fixSegmentName(invalidName)
-	assert.Equal(t, "subDomain.example.com", fixedName)
+	assert.Equal(t, "subDomain.example.com1413", fixedName)
 	fullyInvalidName := "<>"
 	fixedName = fixSegmentName(fullyInvalidName)
 	assert.Equal(t, defaultSegmentName, fixedName)
@@ -584,6 +584,39 @@ func TestSpanWithAttributesSegmentMetadata(t *testing.T) {
 }
 
 func TestResourceAttributesCanBeIndexed(t *testing.T) {
+	err := featuregate.GlobalRegistry().Set("exporter.xray.allowDot", false)
+	assert.Nil(t, err)
+
+	spanName := "/api/locations"
+	parentSpanID := newSegmentID()
+	attributes := make(map[string]any)
+	resource := constructDefaultResource()
+	span := constructServerSpan(parentSpanID, spanName, ptrace.StatusCodeError, "OK", attributes)
+	segment, _ := MakeSegment(span, resource, []string{
+		"otel.resource.string.key",
+		"otel.resource.int.key",
+		"otel.resource.double.key",
+		"otel.resource.bool.key",
+		"otel.resource.map.key",
+		"otel.resource.array.key",
+	}, false, nil, false)
+
+	assert.NotNil(t, segment)
+	assert.Equal(t, 4, len(segment.Annotations))
+	assert.Equal(t, "string", segment.Annotations["otel_resource_string_key"])
+	assert.Equal(t, int64(10), segment.Annotations["otel_resource_int_key"])
+	assert.Equal(t, 5.0, segment.Annotations["otel_resource_double_key"])
+	assert.Equal(t, true, segment.Annotations["otel_resource_bool_key"])
+	expectedMap := make(map[string]any)
+	expectedMap["key1"] = int64(1)
+	expectedMap["key2"] = "value"
+	// Maps and arrays are not supported for annotations so still in metadata.
+	assert.Equal(t, expectedMap, segment.Metadata["default"]["otel.resource.map.key"])
+	expectedArr := []any{"foo", "bar"}
+	assert.Equal(t, expectedArr, segment.Metadata["default"]["otel.resource.array.key"])
+}
+
+func TestResourceAttributesCanBeIndexedWithAllowDot(t *testing.T) {
 	err := featuregate.GlobalRegistry().Set("exporter.xray.allowDot", true)
 	assert.Nil(t, err)
 
@@ -607,7 +640,6 @@ func TestResourceAttributesCanBeIndexed(t *testing.T) {
 	assert.Equal(t, int64(10), segment.Annotations["otel.resource.int.key"])
 	assert.Equal(t, 5.0, segment.Annotations["otel.resource.double.key"])
 	assert.Equal(t, true, segment.Annotations["otel.resource.bool.key"])
-
 	expectedMap := make(map[string]any)
 	expectedMap["key1"] = int64(1)
 	expectedMap["key2"] = "value"
