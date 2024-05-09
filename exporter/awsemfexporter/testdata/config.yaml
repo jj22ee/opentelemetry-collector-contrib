@@ -4,7 +4,7 @@ awsemf/1:
   role_arn: "arn:aws:iam::123456789:role/monitoring-EKS-NodeInstanceRole"
   detailed_metrics: false
   version: "1"
-
+  
 awsemf/resource_attr_to_label:
   resource_to_telemetry_conversion:
     enabled: true
@@ -15,5 +15,3 @@ awsemf/metric_descriptors:
       overwrite: true
 awsemf/disable_metric_extraction:
   disable_metric_extraction: true
-awsemf/enhanced_container_insights:
-  enhanced_container_insights: true

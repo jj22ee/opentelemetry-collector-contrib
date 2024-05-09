@@ -65,7 +65,6 @@ func createMetricsExporter(ctx context.Context, params exporter.CreateSettings, 
 		params,
 		config,
 		emfExp.pushMetricsData,
-		exporterhelper.WithStart(emfExp.start),
 		exporterhelper.WithShutdown(emfExp.shutdown),
 	)
 	if err != nil {

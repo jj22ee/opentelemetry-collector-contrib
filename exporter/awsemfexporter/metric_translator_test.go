@@ -4,9 +4,7 @@
 package awsemfexporter
 
 import (
-	"errors"
 	"fmt"
-	"math"
 	"reflect"
 	"sort"
 	"testing"
@@ -21,17 +19,10 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
 )
 
-const defaultNumberOfTestMetrics = 3
-
 func createTestResourceMetrics() pmetric.ResourceMetrics {
-	return createTestResourceMetricsHelper(defaultNumberOfTestMetrics)
-}
-
-func createTestResourceMetricsHelper(numMetrics int) pmetric.ResourceMetrics {
 	rm := pmetric.NewResourceMetrics()
 	rm.Resource().Attributes().PutStr(occonventions.AttributeExporterVersion, "SomeVersion")
 	rm.Resource().Attributes().PutStr(conventions.AttributeServiceName, "myServiceName")
@@ -88,7 +79,7 @@ func createTestResourceMetricsHelper(numMetrics int) pmetric.ResourceMetrics {
 	q2.SetQuantile(1)
 	q2.SetValue(5)
 
-	for i := 1; i < numMetrics; i++ {
+	for i := 0; i < 2; i++ {
 		m = sm.Metrics().AppendEmpty()
 		m.SetName("spanCounter")
 		m.SetDescription("Counting all the spans")
@@ -277,14 +268,6 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 	noNamespaceMetric.Resource().Attributes().Remove(conventions.AttributeServiceNamespace)
 	noNamespaceMetric.Resource().Attributes().Remove(conventions.AttributeServiceName)
 
-	// need to have 1 more metric than the default because the first is not going to be retained because it is a delta metric
-	containerInsightMetric := createTestResourceMetricsHelper(defaultNumberOfTestMetrics + 1)
-	containerInsightMetric.Resource().Attributes().PutStr(conventions.AttributeServiceName, "containerInsightsKubeAPIServerScraper")
-	gpuMetric := createTestResourceMetricsHelper(defaultNumberOfTestMetrics + 1)
-	gpuMetric.Resource().Attributes().PutStr(conventions.AttributeServiceName, "containerInsightsDCGMExporterScraper")
-	neuronMetric := createTestResourceMetricsHelper(defaultNumberOfTestMetrics + 1)
-	neuronMetric.Resource().Attributes().PutStr(conventions.AttributeServiceName, "containerInsightsNeuronMonitorScraper")
-
 	counterSumMetrics := map[string]*metricInfo{
 		"spanCounter": {
 			value: float64(1),
@@ -321,7 +304,6 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 		counterLabels     map[string]string
 		timerLabels       map[string]string
 		expectedNamespace string
-		expectedReceiver  string
 	}{
 		{
 			"w/ instrumentation library and namespace",
@@ -336,7 +318,6 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 				"spanName":            "testSpan",
 			},
 			"myServiceNS/myServiceName",
-			"prometheus",
 		},
 		{
 			"w/o instrumentation library, w/ namespace",
@@ -349,7 +330,6 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 				"spanName": "testSpan",
 			},
 			"myServiceNS/myServiceName",
-			prometheusReceiver,
 		},
 		{
 			"w/o instrumentation library and namespace",
@@ -362,71 +342,20 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 				"spanName": "testSpan",
 			},
 			defaultNamespace,
-			prometheusReceiver,
-		},
-		{
-			"container insights receiver",
-			containerInsightMetric,
-			map[string]string{
-				"isItAnError": "false",
-				"spanName":    "testSpan",
-			},
-			map[string]string{
-				oTellibDimensionKey: "cloudwatch-lib",
-				"spanName":          "testSpan",
-			},
-			"myServiceNS/containerInsightsKubeAPIServerScraper",
-			containerInsightsReceiver,
-		},
-		{
-			"dcgm receiver",
-			gpuMetric,
-			map[string]string{
-				"isItAnError": "false",
-				"spanName":    "testSpan",
-			},
-			map[string]string{
-				oTellibDimensionKey: "cloudwatch-lib",
-				"spanName":          "testSpan",
-			},
-			"myServiceNS/containerInsightsDCGMExporterScraper",
-			containerInsightsReceiver,
-		},
-		{
-			"neuron monitor receiver",
-			neuronMetric,
-			map[string]string{
-				"isItAnError": "false",
-				"spanName":    "testSpan",
-			},
-			map[string]string{
-				oTellibDimensionKey: "cloudwatch-lib",
-				"spanName":          "testSpan",
-			},
-			"myServiceNS/containerInsightsNeuronMonitorScraper",
-			containerInsightsReceiver,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
+
 			groupedMetrics := make(map[any]*groupedMetric)
 			err := translator.translateOTelToGroupedMetric(tc.metric, groupedMetrics, config)
 			assert.NoError(t, err)
 			assert.NotNil(t, groupedMetrics)
-			assert.Equal(t, defaultNumberOfTestMetrics, len(groupedMetrics))
+			assert.Equal(t, 3, len(groupedMetrics))
 
 			for _, v := range groupedMetrics {
 				assert.Equal(t, tc.expectedNamespace, v.metadata.namespace)
-				assert.Equal(t, tc.expectedReceiver, v.metadata.receiver)
-
-				for _, metric := range v.metrics {
-					if mv, ok := metric.value.(float64); ok {
-						// round the metrics, the floats can get off by a very small amount
-						metric.value = math.Round(mv*100000) / 100000
-					}
-				}
-
 				switch {
 				case v.metadata.metricDataType == pmetric.MetricTypeSum:
 					assert.Equal(t, 2, len(v.metrics))
@@ -549,97 +478,7 @@ func TestTranslateCWMetricToEMF(t *testing.T) {
 			assert.Equal(t, tc.expectedEMFLogEvent, *emfLogEvent.InputLogEvent.Message)
 		})
 	}
-}
 
-func TestTranslateCWMetricToEMFForEnhancedContainerInsights(t *testing.T) {
-	testCases := map[string]struct {
-		EnhancedContainerInsights bool
-		fields                    map[string]any
-		measurements              []cWMeasurement
-		expectedEMFLogEvent       any
-	}{
-		"EnhancedContainerInsightsEnabled": {
-			EnhancedContainerInsights: true,
-			fields: map[string]any{
-				oTellibDimensionKey:                     "cloudwatch-otel",
-				"scrape_samples_post_metric_relabeling": "12",
-				"scrape_samples_scraped":                "34",
-				"scrape_series_added":                   "56",
-				"service.instance.id":                   "1.2.3.4:443",
-				"Sources":                               "[\"apiserver\"]",
-			},
-			measurements:        nil,
-			expectedEMFLogEvent: nil,
-		},
-		"EnhancedContainerInsightsDisabled": {
-			EnhancedContainerInsights: false,
-			fields: map[string]any{
-				oTellibDimensionKey:                     "cloudwatch-otel",
-				"scrape_samples_post_metric_relabeling": "12",
-				"scrape_samples_scraped":                "34",
-				"scrape_series_added":                   "56",
-				"service.instance.id":                   "1.2.3.4:443",
-				"Sources":                               "[\"apiserver\"]",
-			},
-			measurements:        nil,
-			expectedEMFLogEvent: "{\"OTelLib\":\"cloudwatch-otel\",\"Sources\":[\"apiserver\"],\"scrape_samples_post_metric_relabeling\":\"12\",\"scrape_samples_scraped\":\"34\",\"scrape_series_added\":\"56\",\"service.instance.id\":\"1.2.3.4:443\"}",
-		},
-	}
-
-	for name, tc := range testCases {
-		t.Run(name, func(_ *testing.T) {
-			config := &Config{
-				// include valid json string, a non-existing key, and keys whose value are not json/string
-				ParseJSONEncodedAttributeValues: []string{"Sources"},
-				EnhancedContainerInsights:       tc.EnhancedContainerInsights,
-				logger:                          zap.NewNop(),
-			}
-
-			cloudwatchMetric := &cWMetrics{
-				timestampMs:  int64(1596151098037),
-				fields:       tc.fields,
-				measurements: tc.measurements,
-			}
-
-			emfLogEvent, err := translateCWMetricToEMF(cloudwatchMetric, config)
-			require.NoError(t, err)
-
-			if tc.expectedEMFLogEvent != nil {
-				assert.Equal(t, tc.expectedEMFLogEvent, *emfLogEvent.InputLogEvent.Message)
-			}
-		})
-	}
-
-}
-
-func TestTranslateGroupedMetricToEmfForEnhancedContainerInsights(t *testing.T) {
-	tests := map[string]struct {
-		groupedMetric    *groupedMetric
-		config           *Config
-		defaultLogStream string
-		want             *cwlogs.Event
-		expectedErr      error
-	}{
-		"EnhancedContainerInsightsEnabledNoMetrics": {
-			groupedMetric:    &groupedMetric{},
-			config:           &Config{EnhancedContainerInsights: true, DisableMetricExtraction: true},
-			defaultLogStream: "",
-			want:             nil,
-			expectedErr:      errMissingMetricsForEnhancedContainerInsights,
-		},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := translateGroupedMetricToEmf(tt.groupedMetric, tt.config, tt.defaultLogStream)
-			if err != nil && !errors.Is(err, tt.expectedErr) {
-				t.Errorf("translateGroupedMetricToEmf() error = %v, expectedErr %v", err, tt.expectedErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("translateGroupedMetricToEmf() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }
 
 func TestTranslateGroupedMetricToCWMetric(t *testing.T) {

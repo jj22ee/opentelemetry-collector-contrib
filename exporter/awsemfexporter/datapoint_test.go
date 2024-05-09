@@ -794,50 +794,6 @@ func TestIsStaleNaNInf_HistogramDataPointSlice(t *testing.T) {
 
 }
 
-func TestCalculateDeltaDatapoints_HistogramDataPointSlice_Delta(t *testing.T) {
-	cumulativeDeltaMetricMetadata := generateDeltaMetricMetadata(true, "foo", false)
-
-	histogramDPS := pmetric.NewHistogramDataPointSlice()
-	histogramDP := histogramDPS.AppendEmpty()
-	histogramDP.SetCount(uint64(17))
-	histogramDP.SetSum(17.13)
-	histogramDP.SetMin(10)
-	histogramDP.SetMax(30)
-	histogramDP.Attributes().PutStr("label1", "value1")
-
-	histogramDatapointSlice := histogramDataPointSlice{cumulativeDeltaMetricMetadata, histogramDPS}
-	emfCalcs := setupEmfCalculators()
-	defer require.NoError(t, shutdownEmfCalculators(emfCalcs))
-	dps, retained := histogramDatapointSlice.CalculateDeltaDatapoints(0, instrLibName, false, emfCalcs)
-
-	assert.False(t, retained)
-	assert.Equal(t, 1, histogramDatapointSlice.Len())
-	assert.Equal(t, 0, len(dps))
-
-	dps, retained = histogramDatapointSlice.CalculateDeltaDatapoints(0, instrLibName, false, emfCalcs)
-	assert.True(t, retained)
-	assert.Equal(t, 1, histogramDatapointSlice.Len())
-	assert.Equal(t, dataPoint{
-		name:   "foo",
-		value:  &cWMetricStats{Sum: 0, Count: 0, Min: 10, Max: 30},
-		labels: map[string]string{oTellibDimensionKey: instrLibName, "label1": "value1"},
-	}, dps[0])
-
-	histogramDatapointSlice.HistogramDataPointSlice.At(0).SetCount(uint64(27))
-	histogramDatapointSlice.HistogramDataPointSlice.At(0).SetSum(27.27)
-	histogramDP.SetMin(5)
-	histogramDP.SetMax(40)
-
-	dps, retained = histogramDatapointSlice.CalculateDeltaDatapoints(0, instrLibName, false, emfCalcs)
-	assert.True(t, retained)
-	assert.Equal(t, 1, histogramDatapointSlice.Len())
-	assert.Equal(t, dataPoint{
-		name:   "foo",
-		value:  &cWMetricStats{Sum: 10.14, Count: 10, Min: 5, Max: 40},
-		labels: map[string]string{oTellibDimensionKey: instrLibName, "label1": "value1"},
-	}, dps[0])
-}
-
 func TestCalculateDeltaDatapoints_ExponentialHistogramDataPointSlice(t *testing.T) {
 	dmd := generateDeltaMetricMetadata(false, "foo", false)
 
@@ -1133,6 +1089,7 @@ func TestIsStaleNaNInf_ExponentialHistogramDataPointSlice(t *testing.T) {
 			tc.boolAssertFunc(t, isStaleNaNInf)
 		})
 	}
+
 }
 
 func TestCalculateDeltaDatapoints_SummaryDataPointSlice(t *testing.T) {
@@ -1437,81 +1394,54 @@ func TestCreateLabels(t *testing.T) {
 func TestGetDataPoints(t *testing.T) {
 	logger := zap.NewNop()
 
-	normalDeltaMetricMetadata := generateDeltaMetricMetadata(false, "foo", false)
+	normalDeltraMetricMetadata := generateDeltaMetricMetadata(false, "foo", false)
 	cumulativeDeltaMetricMetadata := generateDeltaMetricMetadata(true, "foo", false)
 
 	testCases := []struct {
 		name                   string
-		receiver               string
+		isPrometheusMetrics    bool
 		metric                 pmetric.Metrics
 		expectedDatapointSlice dataPoints
 		expectedAttributes     map[string]any
 	}{
 		{
 			name:                   "Int gauge",
-			receiver:               "",
+			isPrometheusMetrics:    false,
 			metric:                 generateTestGaugeMetric("foo", intValueType),
-			expectedDatapointSlice: numberDataPointSlice{normalDeltaMetricMetadata, pmetric.NumberDataPointSlice{}},
+			expectedDatapointSlice: numberDataPointSlice{normalDeltraMetricMetadata, pmetric.NumberDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
 		},
 		{
 			name:                   "Double sum",
-			receiver:               "",
+			isPrometheusMetrics:    false,
 			metric:                 generateTestSumMetric("foo", doubleValueType),
 			expectedDatapointSlice: numberDataPointSlice{cumulativeDeltaMetricMetadata, pmetric.NumberDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
 		},
 		{
 			name:                   "Histogram",
-			receiver:               "",
-			metric:                 generateTestHistogramMetric("foo"),
-			expectedDatapointSlice: histogramDataPointSlice{normalDeltaMetricMetadata, pmetric.HistogramDataPointSlice{}},
-			expectedAttributes:     map[string]any{"label1": "value1"},
-		},
-		{
-			name:                   "Histogram from ContainerInsights",
-			receiver:               containerInsightsReceiver,
+			isPrometheusMetrics:    false,
 			metric:                 generateTestHistogramMetric("foo"),
 			expectedDatapointSlice: histogramDataPointSlice{cumulativeDeltaMetricMetadata, pmetric.HistogramDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
 		},
 		{
 			name:                   "ExponentialHistogram",
+			isPrometheusMetrics:    false,
 			metric:                 generateTestExponentialHistogramMetric("foo"),
 			expectedDatapointSlice: exponentialHistogramDataPointSlice{cumulativeDeltaMetricMetadata, pmetric.ExponentialHistogramDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
 		},
 		{
-			name:                   "Histogram from Prometheus",
-			receiver:               prometheusReceiver,
-			metric:                 generateTestHistogramMetric("foo"),
-			expectedDatapointSlice: histogramDataPointSlice{normalDeltaMetricMetadata, pmetric.HistogramDataPointSlice{}},
-			expectedAttributes:     map[string]any{"label1": "value1"},
-		},
-		{
-			name:                   "ExponentialHistogram",
-			receiver:               "",
-			metric:                 generateTestExponentialHistogramMetric("foo"),
-			expectedDatapointSlice: exponentialHistogramDataPointSlice{normalDeltaMetricMetadata, pmetric.ExponentialHistogramDataPointSlice{}},
-			expectedAttributes:     map[string]any{"label1": "value1"},
-		},
-		{
 			name:                   "Summary from SDK",
-			receiver:               "",
+			isPrometheusMetrics:    false,
 			metric:                 generateTestSummaryMetric("foo"),
-			expectedDatapointSlice: summaryDataPointSlice{normalDeltaMetricMetadata, pmetric.SummaryDataPointSlice{}},
+			expectedDatapointSlice: summaryDataPointSlice{normalDeltraMetricMetadata, pmetric.SummaryDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
 		},
 		{
 			name:                   "Summary from Prometheus",
-			receiver:               prometheusReceiver,
-			metric:                 generateTestSummaryMetric("foo"),
-			expectedDatapointSlice: summaryDataPointSlice{cumulativeDeltaMetricMetadata, pmetric.SummaryDataPointSlice{}},
-			expectedAttributes:     map[string]any{"label1": "value1"},
-		},
-		{
-			name:                   "Summary from ContainerInsights",
-			receiver:               containerInsightsReceiver,
+			isPrometheusMetrics:    true,
 			metric:                 generateTestSummaryMetric("foo"),
 			expectedDatapointSlice: summaryDataPointSlice{cumulativeDeltaMetricMetadata, pmetric.SummaryDataPointSlice{}},
 			expectedAttributes:     map[string]any{"label1": "value1"},
@@ -1525,7 +1455,13 @@ func TestGetDataPoints(t *testing.T) {
 		metadata := generateTestMetricMetadata("namespace", time.Now().UnixNano()/int64(time.Millisecond), "log-group", "log-stream", "cloudwatch-otel", metric.Type())
 
 		t.Run(tc.name, func(t *testing.T) {
-			metadata.receiver = tc.receiver
+
+			if tc.isPrometheusMetrics {
+				metadata.receiver = prometheusReceiver
+			} else {
+				metadata.receiver = ""
+			}
+
 			dps := getDataPoints(metric, metadata, logger)
 			assert.NotNil(t, dps)
 			assert.Equal(t, reflect.TypeOf(tc.expectedDatapointSlice), reflect.TypeOf(dps))
@@ -1533,7 +1469,6 @@ func TestGetDataPoints(t *testing.T) {
 			case numberDataPointSlice:
 				expectedDPS := tc.expectedDatapointSlice.(numberDataPointSlice)
 				assert.Equal(t, expectedDPS.deltaMetricMetadata, convertedDPS.deltaMetricMetadata)
-				assert.Equal(t, expectedDPS.adjustToDelta, convertedDPS.adjustToDelta)
 				assert.Equal(t, 1, convertedDPS.Len())
 				dp := convertedDPS.NumberDataPointSlice.At(0)
 				switch dp.ValueType() {
@@ -1544,8 +1479,6 @@ func TestGetDataPoints(t *testing.T) {
 				}
 				assert.Equal(t, tc.expectedAttributes, dp.Attributes().AsRaw())
 			case histogramDataPointSlice:
-				expectedDPS := tc.expectedDatapointSlice.(histogramDataPointSlice)
-				assert.Equal(t, expectedDPS.adjustToDelta, convertedDPS.adjustToDelta)
 				assert.Equal(t, 1, convertedDPS.Len())
 				dp := convertedDPS.HistogramDataPointSlice.At(0)
 				assert.Equal(t, 35.0, dp.Sum())
@@ -1564,7 +1497,6 @@ func TestGetDataPoints(t *testing.T) {
 			case summaryDataPointSlice:
 				expectedDPS := tc.expectedDatapointSlice.(summaryDataPointSlice)
 				assert.Equal(t, expectedDPS.deltaMetricMetadata, convertedDPS.deltaMetricMetadata)
-				assert.Equal(t, expectedDPS.adjustToDelta, convertedDPS.adjustToDelta)
 				assert.Equal(t, 1, convertedDPS.Len())
 				dp := convertedDPS.SummaryDataPointSlice.At(0)
 				assert.Equal(t, 15.0, dp.Sum())

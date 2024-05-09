@@ -5,10 +5,8 @@ package awsemfexporter // import "github.com/open-telemetry/opentelemetry-collec
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"go.opentelemetry.io/collector/pdata/pmetric"
@@ -29,12 +27,9 @@ const (
 	singleDimensionRollupOnly    = "SingleDimensionRollupOnly"
 
 	prometheusReceiver        = "prometheus"
-	containerInsightsReceiver = "awscontainerinsight"
 	attributeReceiver         = "receiver"
 	fieldPrometheusMetricType = "prom_metric_type"
 )
-
-var errMissingMetricsForEnhancedContainerInsights = errors.New("nil event detected with EnhancedContainerInsights enabled")
 
 var fieldPrometheusTypes = map[pmetric.MetricType]string{
 	pmetric.MetricTypeEmpty:     "",
@@ -129,16 +124,6 @@ func (mt metricTranslator) translateOTelToGroupedMetric(rm pmetric.ResourceMetri
 	if receiver, ok := rm.Resource().Attributes().Get(attributeReceiver); ok {
 		metricReceiver = receiver.Str()
 	}
-
-	if serviceName, ok := rm.Resource().Attributes().Get("service.name"); ok {
-		if strings.HasPrefix(serviceName.Str(), "containerInsightsKubeAPIServerScraper") ||
-			strings.HasPrefix(serviceName.Str(), "containerInsightsDCGMExporterScraper") ||
-			strings.HasPrefix(serviceName.Str(), "containerInsightsNeuronMonitorScraper") {
-			// the prometheus metrics that come from the container insight receiver need to be clearly tagged as coming from container insights
-			metricReceiver = containerInsightsReceiver
-		}
-	}
-
 	for j := 0; j < ilms.Len(); j++ {
 		ilm := ilms.At(j)
 		if ilm.Scope().Name() != "" {
@@ -430,7 +415,12 @@ func translateCWMetricToEMF(cWMetric *cWMetrics, config *Config) (*cwlogs.Event,
 				"Timestamp":         cWMetric.timestampMs,
 			}
 
-		} else {
+		}
+	}
+
+	if config.Version == "0" {
+		fieldMap["Timestamp"] = fmt.Sprint(cWMetric.timestampMs)
+		if len(cWMetric.measurements) > 0 {
 			/* 	EMF V0
 				{
 					"Version": "0",
@@ -444,11 +434,9 @@ func translateCWMetricToEMF(cWMetric *cWMetrics, config *Config) (*cwlogs.Event,
 					"Timestamp": "1668387032641"
 			  	}
 			*/
+			fieldMap["Version"] = "0"
 			fieldMap["CloudWatchMetrics"] = cWMetric.measurements
 		}
-	} else if len(cWMetric.measurements) < 1 && config.EnhancedContainerInsights {
-		// Return nil if requests does not contain metrics when EnhancedContainerInsights is enabled
-		return nil, nil
 	}
 
 	// remove metrics from fieldMap
@@ -495,12 +483,9 @@ func translateCWMetricToEMF(cWMetric *cWMetrics, config *Config) (*cwlogs.Event,
 func translateGroupedMetricToEmf(groupedMetric *groupedMetric, config *Config, defaultLogStream string) (*cwlogs.Event, error) {
 	cWMetric := translateGroupedMetricToCWMetric(groupedMetric, config)
 	event, err := translateCWMetricToEMF(cWMetric, config)
+
 	if err != nil {
 		return nil, err
-	}
-	// Drop a nil putLogEvent for EnhancedContainerInsights
-	if config.EnhancedContainerInsights && event == nil {
-		return nil, errMissingMetricsForEnhancedContainerInsights
 	}
 
 	logGroup := groupedMetric.metadata.logGroup

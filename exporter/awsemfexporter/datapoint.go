@@ -85,11 +85,15 @@ type numberDataPointSlice struct {
 
 // histogramDataPointSlice is a wrapper for pmetric.HistogramDataPointSlice
 type histogramDataPointSlice struct {
+	// Todo:(khanhntd) Calculate delta value for count and sum value with histogram
+	// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/18245
 	deltaMetricMetadata
 	pmetric.HistogramDataPointSlice
 }
 
 type exponentialHistogramDataPointSlice struct {
+	// TODO: Calculate delta value for count and sum value with exponential histogram
+	// https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/18245
 	deltaMetricMetadata
 	pmetric.ExponentialHistogramDataPointSlice
 }
@@ -157,40 +161,16 @@ func (dps numberDataPointSlice) IsStaleNaNInf(i int) (bool, pcommon.Map) {
 }
 
 // CalculateDeltaDatapoints retrieves the HistogramDataPoint at the given index.
-func (dps histogramDataPointSlice) CalculateDeltaDatapoints(i int, instrumentationScopeName string, _ bool, calculators *emfCalculators) ([]dataPoint, bool) {
+func (dps histogramDataPointSlice) CalculateDeltaDatapoints(i int, instrumentationScopeName string, _ bool, _ *emfCalculators) ([]dataPoint, bool) {
 	metric := dps.HistogramDataPointSlice.At(i)
 	labels := createLabels(metric.Attributes(), instrumentationScopeName)
 	timestamp := unixNanoToMilliseconds(metric.Timestamp())
 
-	sum := metric.Sum()
-	count := metric.Count()
-
-	var datapoints []dataPoint
-
-	if dps.adjustToDelta {
-		var delta any
-		mKey := aws.NewKey(dps.deltaMetricMetadata, labels)
-		delta, retained := calculators.summary.Calculate(mKey, summaryMetricEntry{sum, count}, metric.Timestamp().AsTime())
-
-		// If a delta to the previous data point could not be computed use the current metric value instead
-		if !retained && dps.retainInitialValueForDelta {
-			retained = true
-			delta = summaryMetricEntry{sum, count}
-		}
-
-		if !retained {
-			return datapoints, retained
-		}
-		summaryMetricDelta := delta.(summaryMetricEntry)
-		sum = summaryMetricDelta.sum
-		count = summaryMetricDelta.count
-	}
-
 	return []dataPoint{{
 		name: dps.metricName,
 		value: &cWMetricStats{
-			Count: count,
-			Sum:   sum,
+			Count: metric.Count(),
+			Sum:   metric.Sum(),
 			Max:   metric.Max(),
 			Min:   metric.Min(),
 		},
@@ -436,8 +416,6 @@ func getDataPoints(pmd pmetric.Metric, metadata cWMetricMetadata, logger *zap.Lo
 		}
 	case pmetric.MetricTypeHistogram:
 		metric := pmd.Histogram()
-		// the prometheus histograms from the container insights should be adjusted for delta
-		metricMetadata.adjustToDelta = metadata.receiver == containerInsightsReceiver
 		dps = histogramDataPointSlice{
 			metricMetadata,
 			metric.DataPoints(),
@@ -456,7 +434,7 @@ func getDataPoints(pmd pmetric.Metric, metadata cWMetricMetadata, logger *zap.Lo
 		// attribute processor) from resource metrics. If it exists, and equals to prometheus, the sum and count will be
 		// converted.
 		// For more information: https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/prometheusreceiver/DESIGN.md#summary
-		metricMetadata.adjustToDelta = metadata.receiver == prometheusReceiver || metadata.receiver == containerInsightsReceiver
+		metricMetadata.adjustToDelta = metadata.receiver == prometheusReceiver
 		dps = summaryDataPointSlice{
 			metricMetadata,
 			metric.DataPoints(),
