@@ -538,92 +538,77 @@ func TestUserAgent(t *testing.T) {
 		name                 string
 		buildInfo            component.BuildInfo
 		logGroupName         string
-		userAgentOption      UserAgentOption
+		userAgentOptions     []UserAgentOption
 		expectedUserAgentStr string
 	}{
 		{
 			"emptyLogGroup",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"",
-			WithEnabledContainerInsights(false),
+			[]UserAgentOption{},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"emptyLogGroupAppSignals",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"",
-			WithEnabledAppSignals(false),
+			[]UserAgentOption{WithEnabledAppSignals(false)},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"buildInfoCommandUsed",
 			component.BuildInfo{Command: "test-collector-contrib", Version: "1.0"},
 			"",
-			WithEnabledContainerInsights(false),
+			[]UserAgentOption{},
 			fmt.Sprintf("test-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"buildInfoCommandUsedAppSignals",
 			component.BuildInfo{Command: "test-collector-contrib", Version: "1.0"},
 			"",
-			WithEnabledAppSignals(false),
+			[]UserAgentOption{WithEnabledAppSignals(false)},
 			fmt.Sprintf("test-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"non container insights",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.1"},
 			"test-group",
-			WithEnabledContainerInsights(false),
+			[]UserAgentOption{},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.1 (%s)", expectedComponentName),
 		},
 		{
 			"container insights EKS",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"/aws/containerinsights/eks-cluster-name/performance",
-			WithEnabledContainerInsights(false),
+			[]UserAgentOption{},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; ContainerInsights)", expectedComponentName),
 		},
 		{
 			"container insights ECS",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"/aws/ecs/containerinsights/ecs-cluster-name/performance",
-			WithEnabledContainerInsights(false),
+			[]UserAgentOption{},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; ContainerInsights)", expectedComponentName),
 		},
 		{
 			"container insights prometheus",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"/aws/containerinsights/cluster-name/prometheus",
-			WithEnabledContainerInsights(false),
-			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; ContainerInsights)", expectedComponentName),
-		},
-		{
-			"enhanced container insights EKS",
-			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
-			"/aws/containerinsights/eks-cluster-name/performance",
-			WithEnabledContainerInsights(true),
-			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; EnhancedEKSContainerInsights)", expectedComponentName),
-		},
-		{
-			"negative - enhanced container insights ECS",
-			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
-			// this is an ECS path, enhanced CI is not supported
-			"/aws/ecs/containerinsights/ecs-cluster-name/performance",
-			WithEnabledContainerInsights(true),
+			[]UserAgentOption{},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; ContainerInsights)", expectedComponentName),
 		},
 		{
 			"validAppSignalsEMFEnabled",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"/aws/appsignals",
-			WithEnabledAppSignals(true),
+			[]UserAgentOption{WithEnabledAppSignals(true)},
 			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s; AppSignals)", expectedComponentName),
 		},
 		{
 			"AppSignalsEMFNotEnabled",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"/aws/appsignals",
-			WithEnabledAppSignals(false),
+			[]UserAgentOption{WithEnabledAppSignals(false)},
 			"opentelemetry-collector-contrib/1.0",
 		},
 	}
@@ -631,7 +616,7 @@ func TestUserAgent(t *testing.T) {
 	testSession, _ := session.NewSession()
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			cwlog := NewClient(logger, &aws.Config{}, tc.buildInfo, tc.logGroupName, 0, map[string]*string{}, testSession, expectedComponentName, tc.userAgentOption)
+			cwlog := NewClient(logger, &aws.Config{}, tc.buildInfo, tc.logGroupName, 0, map[string]*string{}, testSession, expectedComponentName, tc.userAgentOptions...)
 			logClient := cwlog.svc.(*cloudwatchlogs.CloudWatchLogs)
 
 			req := request.New(aws.Config{}, metadata.ClientInfo{}, logClient.Handlers, nil, &request.Operation{

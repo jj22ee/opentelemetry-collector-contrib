@@ -27,8 +27,7 @@ const (
 )
 
 var (
-	containerInsightsRegexPattern       = regexp.MustCompile(`^/aws/.*containerinsights/.*/(performance|prometheus)$`)
-	enhancedContainerInsightsEKSPattern = regexp.MustCompile(`^/aws/containerinsights/\S+/performance$`)
+	containerInsightsRegexPattern = regexp.MustCompile(`^/aws/.*containerinsights/.*/(performance|prometheus)$`)
 )
 
 // Possible exceptions are combination of common errors (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/CommonErrors.html)
@@ -42,14 +41,7 @@ type Client struct {
 type UserAgentOption func(*UserAgentFlag)
 
 type UserAgentFlag struct {
-	isEnhancedContainerInsights bool
-	isAppSignals                bool
-}
-
-func WithEnabledContainerInsights(flag bool) UserAgentOption {
-	return func(ua *UserAgentFlag) {
-		ua.isEnhancedContainerInsights = flag
-	}
+	isAppSignals bool
 }
 
 func WithEnabledAppSignals(flag bool) UserAgentOption {
@@ -75,8 +67,7 @@ func NewClient(logger *zap.Logger, awsConfig *aws.Config, buildInfo component.Bu
 
 	// Loop through each option
 	option := &UserAgentFlag{
-		isEnhancedContainerInsights: false,
-		isAppSignals:                false,
+		isAppSignals: false,
 	}
 	for _, opt := range opts {
 		opt(option)
@@ -217,8 +208,6 @@ func newCollectorUserAgentHandler(buildInfo component.BuildInfo, logGroupName st
 	extraStr := ""
 
 	switch {
-	case userAgentFlag.isEnhancedContainerInsights && enhancedContainerInsightsEKSPattern.MatchString(logGroupName):
-		extraStr = "EnhancedEKSContainerInsights"
 	case containerInsightsRegexPattern.MatchString(logGroupName):
 		extraStr = "ContainerInsights"
 	case userAgentFlag.isAppSignals:
