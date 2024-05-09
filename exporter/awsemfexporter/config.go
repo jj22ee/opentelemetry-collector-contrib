@@ -4,6 +4,8 @@
 package awsemfexporter // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
 
 import (
+	"strings"
+
 	"go.opentelemetry.io/collector/component"
 	"go.uber.org/zap"
 

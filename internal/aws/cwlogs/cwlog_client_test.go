@@ -546,14 +546,14 @@ func TestUserAgent(t *testing.T) {
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"",
 			WithEnabledContainerInsights(false),
-			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),,
+			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"emptyLogGroupAppSignals",
 			component.BuildInfo{Command: "opentelemetry-collector-contrib", Version: "1.0"},
 			"",
 			WithEnabledAppSignals(false),
-			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),,
+			fmt.Sprintf("opentelemetry-collector-contrib/1.0 (%s)", expectedComponentName),
 		},
 		{
 			"buildInfoCommandUsed",
