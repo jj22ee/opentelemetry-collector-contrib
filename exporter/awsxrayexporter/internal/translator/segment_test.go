@@ -1262,8 +1262,8 @@ func validateLocalRootServiceSegment(t *testing.T, segment *awsxray.Segment, spa
 	assert.Nil(t, segment.Namespace)
 }
 
-func getBasicAttributes() map[string]interface{} {
-	attributes := make(map[string]interface{})
+func getBasicAttributes() map[string]any {
+	attributes := make(map[string]any)
 
 	attributes[conventions.AttributeHTTPMethod] = "POST"
 	attributes[conventions.AttributeMessagingOperation] = "receive"
@@ -1670,7 +1670,7 @@ func TestNotLocalRootServer(t *testing.T) {
 	assert.Equal(t, "myLocalService", *segments[0].Name)
 }
 
-func constructClientSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]interface{}) ptrace.Span {
+func constructClientSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]any) ptrace.Span {
 	var (
 		traceID        = newTraceID()
 		spanID         = newSegmentID()
@@ -1724,7 +1724,7 @@ func constructServerSpan(parentSpanID pcommon.SpanID, name string, code ptrace.S
 	return span
 }
 
-func constructInternalSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]interface{}) ptrace.Span {
+func constructInternalSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]any) ptrace.Span {
 	var (
 		traceID        = newTraceID()
 		spanID         = newSegmentID()
@@ -1751,7 +1751,7 @@ func constructInternalSpan(parentSpanID pcommon.SpanID, name string, code ptrace
 	return span
 }
 
-func constructConsumerSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]interface{}) ptrace.Span {
+func constructConsumerSpan(parentSpanID pcommon.SpanID, name string, code ptrace.StatusCode, message string, attributes map[string]any) ptrace.Span {
 	var (
 		traceID        = newTraceID()
 		spanID         = newSegmentID()
