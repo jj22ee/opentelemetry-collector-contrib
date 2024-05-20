@@ -10,8 +10,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumererror"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -19,7 +21,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/metadata"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
@@ -70,7 +71,7 @@ func newEmfExporter(config *Config, set exporter.CreateSettings) (*emfExporter, 
 		config.LogRetention,
 		config.Tags,
 		session,
-		metadata.Type.String(),
+		cwlogs.WithEnabledContainerInsights(config.IsEnhancedContainerInsights()),
 		cwlogs.WithEnabledAppSignals(config.IsAppSignalsEnabled()),
 	)
 
@@ -115,7 +116,7 @@ func (emf *emfExporter) pushMetricsData(_ context.Context, md pmetric.Metrics) e
 			})
 		}
 	}
-	emf.config.logger.Debug("Start processing resource metrics", zap.Any("labels", labels))
+	emf.config.logger.Info("Start processing resource metrics", zap.Any("labels", labels))
 	emf.processResourceLabels(labels)
 
 	groupedMetrics := make(map[any]*groupedMetric)
@@ -132,8 +133,13 @@ func (emf *emfExporter) pushMetricsData(_ context.Context, md pmetric.Metrics) e
 	for _, groupedMetric := range groupedMetrics {
 		putLogEvent, err := translateGroupedMetricToEmf(groupedMetric, emf.config, defaultLogStream)
 		if err != nil {
+			if errors.Is(err, errMissingMetricsForEnhancedContainerInsights) {
+				emf.config.logger.Debug("Dropping empty putLogEvents for enhanced container insights", zap.Error(err))
+				continue
+			}
 			return err
 		}
+
 		// Currently we only support two options for "OutputDestination".
 		if strings.EqualFold(outputDestination, outputDestinationStdout) {
 			if putLogEvent != nil &&
@@ -142,7 +148,6 @@ func (emf *emfExporter) pushMetricsData(_ context.Context, md pmetric.Metrics) e
 				fmt.Println(*putLogEvent.InputLogEvent.Message)
 			}
 		} else if strings.EqualFold(outputDestination, outputDestinationCloudWatch) {
-
 			emfPusher := emf.getPusher(putLogEvent.StreamKey)
 			if emfPusher != nil {
 				returnError := emfPusher.AddLogEntry(putLogEvent)
@@ -173,7 +178,6 @@ func (emf *emfExporter) pushMetricsData(_ context.Context, md pmetric.Metrics) e
 }
 
 func (emf *emfExporter) getPusher(key cwlogs.StreamKey) cwlogs.Pusher {
-
 	var ok bool
 	if _, ok = emf.pusherMap[key]; !ok {
 		emf.pusherMap[key] = cwlogs.NewPusher(key, emf.retryCnt, *emf.svcStructuredLog, emf.config.logger)
@@ -190,6 +194,13 @@ func (emf *emfExporter) listPushers() []cwlogs.Pusher {
 		pushers = append(pushers, pusher)
 	}
 	return pushers
+}
+
+func (emf *emfExporter) start(_ context.Context, host component.Host) error {
+	if emf.config.MiddlewareID != nil {
+		awsmiddleware.TryConfigure(emf.config.logger, host, *emf.config.MiddlewareID, awsmiddleware.SDKv1(emf.svcStructuredLog.Handlers()))
+	}
+	return nil
 }
 
 // shutdown stops the exporter and is invoked during shutdown.

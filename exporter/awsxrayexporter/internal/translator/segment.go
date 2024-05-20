@@ -48,10 +48,8 @@ const (
 
 var (
 	// reInvalidSpanCharacters defines the invalid letters in a span name as per
-	// Allowed characters for X-Ray Segment Name:
-	// Unicode letters, numbers, and whitespace, and the following symbols: _, ., :, /, %, &, #, =, +, \, -, @
-	// Doc: https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html
-	reInvalidSpanCharacters = regexp.MustCompile(`[^ 0-9\p{L}N_.:/%&#=+\-@]`)
+	// https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html
+	reInvalidSpanCharacters = regexp.MustCompile(`[^ 0-9\p{L}N_.:/%&#=+,\-@]`)
 )
 
 var (
@@ -121,7 +119,7 @@ func isLocalRootSpanADependencySpan(span ptrace.Span) bool {
 		span.Kind() != ptrace.SpanKindInternal
 }
 
-// isLocalRoot - we will move to using isRemote once the collector supports deserializing it. Until then, we will rely on aws.span.kind.
+// IsLocalRoot We will move to using isRemote once the collector supports deserializing it. Until then, we will rely on aws.span.kind.
 func isLocalRoot(span ptrace.Span) bool {
 	if myAwsSpanKind, ok := span.Attributes().Get(awsSpanKind); ok {
 		return localRoot == myAwsSpanKind.Str()
@@ -757,7 +755,7 @@ func fixAnnotationKey(key string) string {
 		case 'A' <= r && r <= 'Z':
 			fallthrough
 		case 'a' <= r && r <= 'z':
-			return r
+			fallthrough
 		case remoteXrayExporterDotConverter.IsEnabled() && r == '.':
 			return r
 		default:

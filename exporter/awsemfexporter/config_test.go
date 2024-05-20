@@ -104,6 +104,50 @@ func TestLoadConfig(t *testing.T) {
 				logger: zap.NewNop(),
 			},
 		},
+		{
+			id: component.NewIDWithName(metadata.Type, "disable_metric_extraction"),
+			expected: &Config{
+				AWSSessionSettings: awsutil.AWSSessionSettings{
+					NumberOfWorkers:       8,
+					Endpoint:              "",
+					RequestTimeoutSeconds: 30,
+					MaxRetries:            2,
+					NoVerifySSL:           false,
+					ProxyAddress:          "",
+					Region:                "",
+					RoleARN:               "",
+				},
+				LogGroupName:            "",
+				LogStreamName:           "",
+				DimensionRollupOption:   "ZeroAndSingleDimensionRollup",
+				OutputDestination:       "cloudwatch",
+				Version:                 "1",
+				DisableMetricExtraction: true,
+				logger:                  zap.NewNop(),
+			},
+		},
+		{
+			id: component.NewIDWithName(metadata.Type, "enhanced_container_insights"),
+			expected: &Config{
+				AWSSessionSettings: awsutil.AWSSessionSettings{
+					NumberOfWorkers:       8,
+					Endpoint:              "",
+					RequestTimeoutSeconds: 30,
+					MaxRetries:            2,
+					NoVerifySSL:           false,
+					ProxyAddress:          "",
+					Region:                "",
+					RoleARN:               "",
+				},
+				LogGroupName:              "",
+				LogStreamName:             "",
+				DimensionRollupOption:     "ZeroAndSingleDimensionRollup",
+				OutputDestination:         "cloudwatch",
+				Version:                   "1",
+				EnhancedContainerInsights: true,
+				logger:                    zap.NewNop(),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -269,6 +313,19 @@ func TestNoDimensionRollupFeatureGate(t *testing.T) {
 
 	assert.Equal(t, cfg.(*Config).DimensionRollupOption, "NoDimensionRollup")
 	_ = featuregate.GlobalRegistry().Set("awsemf.nodimrollupdefault", false)
+}
+
+func TestIsEnhancedContainerInsights(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig().(*Config)
+	cfg.EnhancedContainerInsights = true
+	cfg.DisableMetricExtraction = false
+	assert.True(t, cfg.IsEnhancedContainerInsights())
+	cfg.EnhancedContainerInsights = false
+	assert.False(t, cfg.IsEnhancedContainerInsights())
+	cfg.EnhancedContainerInsights = true
+	cfg.DisableMetricExtraction = true
+	assert.False(t, cfg.IsEnhancedContainerInsights())
 }
 
 func TestIsAppSignalsEnabled(t *testing.T) {
