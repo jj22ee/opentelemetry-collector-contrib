@@ -19,10 +19,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/common"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/config"
-	attr "github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/internal/attributes"
 	"github.com/aws/amazon-cloudwatch-agent/translator/util/eksdetector"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
+	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/aws/eks"
 )
 
 // MockDeleter deletes a key immediately, useful for testing.
@@ -823,6 +824,7 @@ func TestEksResolver(t *testing.T) {
 }
 
 func TestK8sResourceAttributesResolverOnEKS(t *testing.T) {
+	eks
 	eksdetector.NewDetector = eksdetector.TestEKSDetector
 	eksdetector.IsEKS = eksdetector.TestIsEKSCacheEKS
 	// helper function to get string values from the attributes

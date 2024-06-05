@@ -14,12 +14,12 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	appsignalsconfig "github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/config"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/internal/cardinalitycontrol"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/internal/normalizer"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/internal/prune"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/internal/resolver"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/rules"
+	appsignalsconfig "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/cardinalitycontrol"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/normalizer"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/prune"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/resolver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/rules"
 )
 
 const (

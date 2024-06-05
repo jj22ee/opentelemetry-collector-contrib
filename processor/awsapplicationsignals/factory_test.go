@@ -12,8 +12,8 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/config"
-	"github.com/aws/amazon-cloudwatch-agent/plugins/processors/awsapplicationsignals/rules"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/rules"
 )
 
 var expectedRules = []rules.Rule{
