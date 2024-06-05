@@ -164,7 +164,7 @@ func (n *attributesNormalizer) normalizeTelemetryAttributes(attributes, resource
 		mode = instrumentationModeAuto
 	}
 	attributes.PutStr(common.AttributeTelemetrySDK, fmt.Sprintf("%s,%s,%s,%s", sdkName, sdkVersion, sdkLang, mode))
-	attributes.PutStr(common.AttributeTelemetryAgent, fmt.Sprintf("CWAgent/%s", version.Number()))
+	attributes.PutStr(common.AttributeTelemetryAgent, fmt.Sprintf("OTelCollector/%s", version.Number()))
 
 	var telemetrySource string
 	if val, ok := attributes.Get(attr.AWSSpanKind); ok {
