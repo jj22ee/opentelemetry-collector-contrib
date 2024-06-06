@@ -8,12 +8,12 @@ require (
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/gobwas/glob v0.2.3
 	github.com/stretchr/testify v1.9.0
-	go.opentelemetry.io/collector/component v0.102.1
-	go.opentelemetry.io/collector/confmap v0.102.1
-	go.opentelemetry.io/collector/consumer v0.102.1
+	go.opentelemetry.io/collector/component v0.100.0
+	go.opentelemetry.io/collector/confmap v0.100.0
+	go.opentelemetry.io/collector/consumer v0.100.0
 	go.opentelemetry.io/collector/pdata v1.9.0
-	go.opentelemetry.io/collector/processor v0.102.1
-	go.opentelemetry.io/collector/semconv v0.102.1
+	go.opentelemetry.io/collector/processor v0.100.0
+	go.opentelemetry.io/collector/semconv v0.100.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/text v0.15.0
 	k8s.io/api v0.30.1
@@ -49,7 +49,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	go.opentelemetry.io/collector v0.102.1 // indirect
+	go.opentelemetry.io/collector v0.100.0 // indirect
 	go.opentelemetry.io/collector/config/configtelemetry v0.102.1 // indirect
 	go.opentelemetry.io/otel v1.27.0 // indirect
 	go.opentelemetry.io/otel/metric v1.27.0 // indirect
@@ -60,7 +60,6 @@ require (
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240520151616-dc85e6b867a5 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
