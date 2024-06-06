@@ -12,7 +12,6 @@ import (
 	semconv "go.opentelemetry.io/collector/semconv/v1.22.0"
 	"go.uber.org/zap"
 
-	"github.com/aws/amazon-cloudwatch-agent/internal/version"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
 	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
 )
@@ -164,7 +163,8 @@ func (n *attributesNormalizer) normalizeTelemetryAttributes(attributes, resource
 		mode = instrumentationModeAuto
 	}
 	attributes.PutStr(common.AttributeTelemetrySDK, fmt.Sprintf("%s,%s,%s,%s", sdkName, sdkVersion, sdkLang, mode))
-	attributes.PutStr(common.AttributeTelemetryAgent, fmt.Sprintf("OTelCollector/%s", version.Number()))
+	// TODO: append version to OTelCollector (e.g. OTelCollector/v0.100.0)
+	attributes.PutStr(common.AttributeTelemetryAgent, fmt.Sprintf("OTelCollector"))
 
 	var telemetrySource string
 	if val, ok := attributes.Get(attr.AWSSpanKind); ok {

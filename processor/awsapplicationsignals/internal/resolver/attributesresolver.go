@@ -13,7 +13,6 @@ import (
 	semconv "go.opentelemetry.io/collector/semconv/v1.22.0"
 	"go.uber.org/zap"
 
-	"github.com/aws/amazon-cloudwatch-agent/translator/util/ecsutil"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
 	appsignalsconfig "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
 	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
@@ -60,7 +59,7 @@ func NewAttributesResolver(resolvers []appsignalsconfig.Resolver, logger *zap.Lo
 		case appsignalsconfig.PlatformEC2:
 			subResolvers = append(subResolvers, newResourceAttributesResolver(resolver.Platform, AttributePlatformEC2, DefaultInheritedAttributes))
 		default:
-			if ecsutil.GetECSUtilSingleton().IsECS() {
+			if GetECSUtilSingleton().IsECS() {
 				subResolvers = append(subResolvers, newResourceAttributesResolver(appsignalsconfig.PlatformECS, AttributePlatformGeneric, DefaultInheritedAttributes))
 			} else {
 				subResolvers = append(subResolvers, newResourceAttributesResolver(resolver.Platform, AttributePlatformGeneric, GenericInheritedAttributes))
@@ -125,7 +124,7 @@ func getLocalEnvironment(attributes, resourceAttributes pcommon.Map, defaultEnvP
 		if clusterName, _ := getECSClusterName(resourceAttributes); clusterName != "" {
 			return getDefaultEnvironment(defaultEnvPrefix, clusterName)
 		}
-		if clusterName := ecsutil.GetECSUtilSingleton().Cluster; clusterName != "" {
+		if clusterName := GetECSUtilSingleton().Cluster; clusterName != "" {
 			return getDefaultEnvironment(defaultEnvPrefix, clusterName)
 		}
 	} else if defaultEnvPrefix == appsignalsconfig.PlatformEC2 {
