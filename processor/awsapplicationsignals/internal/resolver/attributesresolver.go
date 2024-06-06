@@ -59,11 +59,7 @@ func NewAttributesResolver(resolvers []appsignalsconfig.Resolver, logger *zap.Lo
 		case appsignalsconfig.PlatformEC2:
 			subResolvers = append(subResolvers, newResourceAttributesResolver(resolver.Platform, AttributePlatformEC2, DefaultInheritedAttributes))
 		default:
-			if GetECSUtilSingleton().IsECS() {
-				subResolvers = append(subResolvers, newResourceAttributesResolver(appsignalsconfig.PlatformECS, AttributePlatformGeneric, DefaultInheritedAttributes))
-			} else {
-				subResolvers = append(subResolvers, newResourceAttributesResolver(resolver.Platform, AttributePlatformGeneric, GenericInheritedAttributes))
-			}
+			subResolvers = append(subResolvers, newResourceAttributesResolver(resolver.Platform, AttributePlatformGeneric, GenericInheritedAttributes))
 		}
 	}
 	return &attributesResolver{
@@ -122,9 +118,6 @@ func getLocalEnvironment(attributes, resourceAttributes pcommon.Map, defaultEnvP
 	}
 	if defaultEnvPrefix == appsignalsconfig.PlatformECS {
 		if clusterName, _ := getECSClusterName(resourceAttributes); clusterName != "" {
-			return getDefaultEnvironment(defaultEnvPrefix, clusterName)
-		}
-		if clusterName := GetECSUtilSingleton().Cluster; clusterName != "" {
 			return getDefaultEnvironment(defaultEnvPrefix, clusterName)
 		}
 	} else if defaultEnvPrefix == appsignalsconfig.PlatformEC2 {
