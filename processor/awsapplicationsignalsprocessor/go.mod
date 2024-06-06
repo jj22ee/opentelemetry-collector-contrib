@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals
+module github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor
 
 go 1.22.0
 

@@ -25,9 +25,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
-	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/common"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/attributes"
 )
 
 const (

@@ -6,8 +6,8 @@ package rules
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
-	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/common"
+	attr "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/attributes"
 )
 
 func generateTestAttributes(service string, operation string, remoteService string, remoteOperation string,

@@ -9,8 +9,8 @@ import (
 	"github.com/gobwas/glob"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/common"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/attributes"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/common"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/attributes"
 )
 
 type AllowListAction string

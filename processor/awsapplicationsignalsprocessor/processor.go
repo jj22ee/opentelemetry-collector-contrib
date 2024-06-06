@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 
-package awsapplicationsignals
+package awsapplicationsignalsprocessor
 
 import (
 	"context"
@@ -14,12 +14,12 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	appsignalsconfig "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/config"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/cardinalitycontrol"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/normalizer"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/prune"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/internal/resolver"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignals/rules"
+	appsignalsconfig "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/cardinalitycontrol"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/normalizer"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/prune"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/resolver"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
 )
 
 const (
