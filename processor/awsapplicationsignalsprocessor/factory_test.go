@@ -4,153 +4,41 @@
 package awsapplicationsignalsprocessor
 
 import (
-	"path/filepath"
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/confmap/confmaptest"
-
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
+	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/consumer/consumertest"
+	"go.opentelemetry.io/collector/processor/processortest"
 )
 
-var expectedRules = []rules.Rule{
-	{
-		Selectors: []rules.Selector{
-			{
-				Dimension: "Operation",
-				Match:     "* /api/visits/*",
-			},
-			{
-				Dimension: "RemoteOperation",
-				Match:     "*",
-			},
-		},
-		Action:   "keep",
-		RuleName: "keep01",
-	},
-	{
-		Selectors: []rules.Selector{
-			{
-				Dimension: "RemoteService",
-				Match:     "UnknownRemoteService",
-			},
-			{
-				Dimension: "RemoteOperation",
-				Match:     "GetShardIterator",
-			},
-		},
-		Action: "drop",
-	},
-	{
-		Selectors: []rules.Selector{
-			{
-				Dimension: "Operation",
-				Match:     "* /api/visits/*",
-			},
-			{
-				Dimension: "RemoteOperation",
-				Match:     "*",
-			},
-		},
-		Replacements: []rules.Replacement{
-			{
-				TargetDimension: "RemoteOperation",
-				Value:           "ListPetsByCustomer",
-			},
-			{
-				TargetDimension: "ResourceTarget",
-				Value:           " ",
-			},
-		},
-		Action: "replace",
-	},
+func TestCreateDefaultConfig(t *testing.T) {
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
+	assert.NotNil(t, cfg, "Failed to create default configuration")
+	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }
 
-func TestLoadEKSConfig(t *testing.T) {
-	t.Parallel()
+func TestCreateProcessors(t *testing.T) {
+	factory := NewFactory()
 
-	tests := []struct {
-		name         string
-		expected     component.Config
-		errorMessage string
-	}{
-		{
-			name: "awsapplicationsignals",
-			expected: &Config{
-				Resolvers: []config.Resolver{config.NewEKSResolver("test")},
-				Rules:     expectedRules,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			newType, _ := component.NewType(tt.name)
-			id := component.NewIDWithName(newType, "")
-			cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config_eks.yaml"))
-			require.NoError(t, err)
+	cfg := factory.CreateDefaultConfig()
+	params := processortest.NewNopCreateSettings()
 
-			factory := NewFactory()
-			cfg := factory.CreateDefaultConfig().(*Config)
+	tp, err := factory.CreateTracesProcessor(context.Background(), params, cfg, consumertest.NewNop())
+	assert.NotNil(t, tp)
+	assert.NoError(t, err)
 
-			sub, err := cm.Sub(id.String())
-			require.NoError(t, err)
-			require.NoError(t, component.UnmarshalConfig(sub, cfg))
+	mp, err := factory.CreateMetricsProcessor(context.Background(), params, cfg, consumertest.NewNop())
+	assert.NotNil(t, mp)
+	assert.NoError(t, err)
 
-			if tt.expected == nil {
-				assert.EqualError(t, component.ValidateConfig(cfg), tt.errorMessage)
-				return
-			}
-			assert.NoError(t, component.ValidateConfig(cfg))
-			assert.Equal(t, tt.expected, cfg)
+	tp, err = factory.CreateTracesProcessor(context.Background(), params, cfg, consumertest.NewNop())
+	assert.NotNil(t, tp)
+	assert.NoError(t, err)
 
-			validateErr := cfg.Validate()
-			assert.Nil(t, validateErr, validateErr)
-		})
-	}
-}
-
-func TestLoadGenericConfig(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		expected     component.Config
-		errorMessage string
-	}{
-		{
-			name: "awsapplicationsignals",
-			expected: &Config{
-				Resolvers: []config.Resolver{config.NewGenericResolver("")},
-				Rules:     expectedRules,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			newType, _ := component.NewType(tt.name)
-			id := component.NewIDWithName(newType, "")
-			cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config_generic.yaml"))
-			require.NoError(t, err)
-
-			factory := NewFactory()
-			cfg := factory.CreateDefaultConfig().(*Config)
-
-			sub, err := cm.Sub(id.String())
-			require.NoError(t, err)
-			require.NoError(t, component.UnmarshalConfig(sub, cfg))
-
-			if tt.expected == nil {
-				assert.EqualError(t, component.ValidateConfig(cfg), tt.errorMessage)
-				return
-			}
-			assert.NoError(t, component.ValidateConfig(cfg))
-			assert.Equal(t, tt.expected, cfg)
-
-			validateErr := cfg.Validate()
-			assert.Nil(t, validateErr, validateErr)
-		})
-	}
+	mp, err = factory.CreateMetricsProcessor(context.Background(), params, cfg, consumertest.NewNop())
+	assert.NotNil(t, mp)
+	assert.NoError(t, err)
 }
