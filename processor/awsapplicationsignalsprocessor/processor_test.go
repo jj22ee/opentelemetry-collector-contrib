@@ -60,7 +60,7 @@ func TestProcessMetrics(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	ap := &awsapplicationsignalsprocessor{
 		logger: logger,
-		config: &config.Config{
+		config: &Config{
 			Resolvers: []config.Resolver{config.NewGenericResolver("")},
 			Rules:     testRules,
 		},
@@ -104,7 +104,7 @@ func TestProcessMetricsLowercase(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	ap := &awsapplicationsignalsprocessor{
 		logger: logger,
-		config: &config.Config{
+		config: &Config{
 			Resolvers: []config.Resolver{config.NewGenericResolver("")},
 			Rules:     testRules,
 		},
@@ -131,7 +131,7 @@ func TestProcessTraces(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	ap := &awsapplicationsignalsprocessor{
 		logger: logger,
-		config: &config.Config{
+		config: &Config{
 			Resolvers: []config.Resolver{config.NewGenericResolver("")},
 			Rules:     testRules,
 		},

@@ -44,7 +44,7 @@ type stopper interface {
 
 type awsapplicationsignalsprocessor struct {
 	logger            *zap.Logger
-	config            *appsignalsconfig.Config
+	config            *Config
 	replaceActions    *rules.ReplaceActions
 	allowlistMutators []allowListMutator
 	metricMutators    []attributesMutator

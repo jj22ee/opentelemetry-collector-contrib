@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/collector/processor"
 	"go.opentelemetry.io/collector/processor/processorhelper"
 
-	appsignalsconfig "github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
 )
 
 const (
@@ -37,8 +37,8 @@ func NewFactory() processor.Factory {
 }
 
 func createDefaultConfig() component.Config {
-	return &appsignalsconfig.Config{
-		Resolvers: []appsignalsconfig.Resolver{},
+	return &Config{
+		Resolvers: []config.Resolver{},
 	}
 }
 
@@ -90,7 +90,7 @@ func createProcessor(
 	params processor.CreateSettings,
 	cfg component.Config,
 ) (*awsapplicationsignalsprocessor, error) {
-	pCfg, ok := cfg.(*appsignalsconfig.Config)
+	pCfg, ok := cfg.(*Config)
 	if !ok {
 		return nil, errors.New("could not initialize awsapplicationsignalsprocessor")
 	}

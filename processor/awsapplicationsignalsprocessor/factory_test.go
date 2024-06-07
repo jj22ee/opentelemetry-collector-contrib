@@ -79,7 +79,7 @@ func TestLoadEKSConfig(t *testing.T) {
 	}{
 		{
 			name: "awsapplicationsignals",
-			expected: &config.Config{
+			expected: &Config{
 				Resolvers: []config.Resolver{config.NewEKSResolver("test")},
 				Rules:     expectedRules,
 			},
@@ -93,7 +93,7 @@ func TestLoadEKSConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			factory := NewFactory()
-			cfg := factory.CreateDefaultConfig().(*config.Config)
+			cfg := factory.CreateDefaultConfig().(*Config)
 
 			sub, err := cm.Sub(id.String())
 			require.NoError(t, err)
@@ -122,7 +122,7 @@ func TestLoadGenericConfig(t *testing.T) {
 	}{
 		{
 			name: "awsapplicationsignals",
-			expected: &config.Config{
+			expected: &Config{
 				Resolvers: []config.Resolver{config.NewGenericResolver("")},
 				Rules:     expectedRules,
 			},
@@ -136,7 +136,7 @@ func TestLoadGenericConfig(t *testing.T) {
 			require.NoError(t, err)
 
 			factory := NewFactory()
-			cfg := factory.CreateDefaultConfig().(*config.Config)
+			cfg := factory.CreateDefaultConfig().(*Config)
 
 			sub, err := cm.Sub(id.String())
 			require.NoError(t, err)
