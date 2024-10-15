@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	// "github.com/aws/amazon-cloudwatch-agent/translator/config"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/httpclient"
 )
 
@@ -18,6 +17,13 @@ const (
 	v2MetadataEndpoint    = "http://169.254.170.2/v2/metadata"
 	v3MetadataEndpointEnv = "ECS_CONTAINER_METADATA_URI"
 	v4MetadataEndpointEnv = "ECS_CONTAINER_METADATA_URI_V4"
+)
+
+// The following values are borrowed from:
+// - https://github.com/aws/amazon-cloudwatch-agent/blob/bde3bd9775ae1d4e4f8a2fdb92d7b6fdd5186fba/cfg/envconfig/envconfig.go
+const (
+	RunInContainer = "RUN_IN_CONTAINER"
+	TrueValue      = "True"
 )
 
 type ecsMetadataResponse struct {
@@ -45,7 +51,7 @@ func GetECSUtilSingleton() *ecsUtil {
 
 func initECSUtilSingleton() (newInstance *ecsUtil) {
 	newInstance = &ecsUtil{httpClient: httpclient.New()}
-	if os.Getenv(config.RUN_IN_CONTAINER) != config.RUN_IN_CONTAINER_TRUE {
+	if os.Getenv(RunInContainer) != TrueValue {
 		return
 	}
 	log.Println("I! attempt to access ECS task metadata to determine whether I'm running in ECS.")

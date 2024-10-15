@@ -4,9 +4,7 @@
 package normalizer
 
 import (
-	"runtime"
 	"runtime/debug"
-	"strings"
 	"sync"
 )
 
