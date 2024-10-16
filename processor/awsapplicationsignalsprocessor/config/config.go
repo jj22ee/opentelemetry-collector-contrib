@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
 )
 
 type Config struct {
