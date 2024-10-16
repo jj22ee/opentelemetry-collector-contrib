@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package awsxrayexporter // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter"
+package awsxrayexporter // import "github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsxrayexporter"
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/featuregate"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	"github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/metadata"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 )
 
 var skipTimestampValidationFeatureGate = featuregate.GlobalRegistry().MustRegister(

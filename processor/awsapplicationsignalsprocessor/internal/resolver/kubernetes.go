@@ -21,9 +21,9 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/common"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
-	attr "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/attributes"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/common"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	attr "github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/attributes"
 )
 
 const (

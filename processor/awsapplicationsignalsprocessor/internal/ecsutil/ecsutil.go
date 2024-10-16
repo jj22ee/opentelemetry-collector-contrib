@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/httpclient"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/internal/httpclient"
 )
 
 const (

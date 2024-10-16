@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package appsignals // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
+package appsignals // import "github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
 
 import (
 	"context"

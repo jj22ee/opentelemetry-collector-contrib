@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/collector/processor"
 	"go.opentelemetry.io/collector/processor/processorhelper"
 
-	appsignalsconfig "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	appsignalsconfig "github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
 )
 
 const (

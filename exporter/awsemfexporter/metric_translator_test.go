@@ -21,9 +21,12 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
+
+// Copied from "github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
+// We do not want to add a dependency on internal package `occonventions` for a test case
+const opencensusAttributeExporterVersion = "opencensus.exporterversion"
 
 const defaultNumberOfTestMetrics = 3
 
@@ -33,7 +36,7 @@ func createTestResourceMetrics() pmetric.ResourceMetrics {
 
 func createTestResourceMetricsHelper(numMetrics int) pmetric.ResourceMetrics {
 	rm := pmetric.NewResourceMetrics()
-	rm.Resource().Attributes().PutStr(occonventions.AttributeExporterVersion, "SomeVersion")
+	rm.Resource().Attributes().PutStr(opencensusAttributeExporterVersion, "SomeVersion")
 	rm.Resource().Attributes().PutStr(conventions.AttributeServiceName, "myServiceName")
 	rm.Resource().Attributes().PutStr(conventions.AttributeServiceNamespace, "myServiceNS")
 	rm.Resource().Attributes().PutStr("ClusterName", "myCluster")
@@ -431,7 +434,7 @@ func TestTranslateOtToGroupedMetric(t *testing.T) {
 	t.Run("No metrics", func(t *testing.T) {
 		rm := pmetric.NewResourceMetrics()
 		rm.Resource().Attributes().PutStr(conventions.AttributeServiceName, "myServiceName")
-		rm.Resource().Attributes().PutStr(occonventions.AttributeExporterVersion, "SomeVersion")
+		rm.Resource().Attributes().PutStr(opencensusAttributeExporterVersion, "SomeVersion")
 		groupedMetrics := make(map[any]*groupedMetric)
 		err := translator.translateOTelToGroupedMetric(rm, groupedMetrics, config)
 		assert.NoError(t, err)

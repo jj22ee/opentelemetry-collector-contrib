@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package awsemfexporter // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
+package awsemfexporter // import "github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsemfexporter"
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
 
-	aws "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics"
+	aws "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics"
 )
 
 // groupedMetric defines set of metrics with same namespace, timestamp and labels
