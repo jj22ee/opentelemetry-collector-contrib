@@ -20,9 +20,9 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
+	"github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
 
 const (

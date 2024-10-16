@@ -6,7 +6,7 @@ package telemetrytest // import "github.com/open-telemetry/opentelemetry-collect
 import (
 	"sync/atomic"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 )
 
 // NewSenderSink returns a Sender that acts like a sink and

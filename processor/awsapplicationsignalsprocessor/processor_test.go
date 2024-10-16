@@ -12,8 +12,8 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/config"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/awsapplicationsignalsprocessor/rules"
 )
 
 var testRules = []rules.Rule{

@@ -20,10 +20,10 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	"github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 )
 
 const (

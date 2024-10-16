@@ -8,7 +8,7 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 type Registry interface {
