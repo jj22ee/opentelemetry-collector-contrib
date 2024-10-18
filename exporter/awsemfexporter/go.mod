@@ -7,10 +7,9 @@ require (
 	github.com/aws/aws-sdk-go v1.53.11
 	github.com/google/uuid v1.6.0
 	github.com/jellydator/ttlcache/v3 v3.2.0
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018183007-bf3ec676a904
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs v0.0.0-20241018183007-bf3ec676a904
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics v0.0.0-20241018183007-bf3ec676a904
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal v0.0.0-20241018183007-bf3ec676a904
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018193414-de8635918f2f
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs v0.0.0-20241018193414-de8635918f2f
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics v0.0.0-20241018193414-de8635918f2f
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.103.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/component v0.103.0

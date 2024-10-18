@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package awsxray // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+package awsxray // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 
 // AWS-specific OpenTelemetry attribute names
 const (

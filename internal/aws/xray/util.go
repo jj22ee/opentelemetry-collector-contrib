@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package awsxray // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+package awsxray // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 
 // String returns a pointer to the provided string, or nil if it is an empty string.
 func String(v string) *string {

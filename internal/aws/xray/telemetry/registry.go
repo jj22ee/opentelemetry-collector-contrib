@@ -1,14 +1,14 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package telemetry // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+package telemetry // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 
 import (
 	"sync"
 
 	"go.opentelemetry.io/collector/component"
 
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 type Registry interface {

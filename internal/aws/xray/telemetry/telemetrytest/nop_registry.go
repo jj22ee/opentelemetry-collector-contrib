@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package telemetrytest // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
+package telemetrytest // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
 
 import (
 	"go.opentelemetry.io/collector/component"
 
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 )
 
 func NewNopRegistry() telemetry.Registry {

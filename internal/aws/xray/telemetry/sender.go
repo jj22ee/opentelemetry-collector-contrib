@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package telemetry // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+package telemetry // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 
 import (
 	"os"
@@ -15,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 const (
