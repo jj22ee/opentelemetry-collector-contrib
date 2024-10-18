@@ -21,8 +21,8 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
 )
 
 const defaultNumberOfTestMetrics = 3

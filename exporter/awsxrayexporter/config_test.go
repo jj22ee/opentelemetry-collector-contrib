@@ -12,8 +12,8 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/metadata"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/metadata"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
 )
 
 func TestLoadConfig(t *testing.T) {

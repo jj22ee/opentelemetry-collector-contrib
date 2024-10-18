@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter
+module github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsemfexporter
 
 go 1.22.5
 
@@ -7,10 +7,10 @@ require (
 	github.com/aws/aws-sdk-go v1.53.11
 	github.com/google/uuid v1.6.0
 	github.com/jellydator/ttlcache/v3 v3.2.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.103.0
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018183007-bf3ec676a904
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs v0.0.0-20241018183007-bf3ec676a904
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics v0.0.0-20241018183007-bf3ec676a904
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal v0.0.0-20241018183007-bf3ec676a904
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.103.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/component v0.103.0
@@ -74,13 +74,13 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics => ../../internal/aws/metrics
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics => ../../internal/aws/metrics
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal => ../../internal/coreinternal
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal => ../../internal/coreinternal
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry => ../../pkg/resourcetotelemetry
 

@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package translator // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
+package translator // import "github.com/jj22ee/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 
-	awsxray "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray"
+	awsxray "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 func makeService(resource pcommon.Resource) *awsxray.ServiceData {

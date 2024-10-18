@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
-	aws "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics"
+	aws "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/metrics"
 )
 
 type metricValueType string
