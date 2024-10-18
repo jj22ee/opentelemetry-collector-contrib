@@ -5,9 +5,9 @@ go 1.22.5
 require (
 	github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware v0.0.0-20240419190856-2f880467f335
 	github.com/aws/aws-sdk-go v1.53.11
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018193414-de8635918f2f
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray v0.0.0-20241018193414-de8635918f2f
-	// github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal v0.0.0-20241018193414-de8635918f2f
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018204820-ab5376058799
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/xray v0.0.0-20241018204820-ab5376058799
+	// github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal v0.0.0-20241018204820-ab5376058799
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/component v0.103.0
 	go.opentelemetry.io/collector/confmap v0.103.0
