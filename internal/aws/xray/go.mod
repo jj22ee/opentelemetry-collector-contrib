@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go v1.53.11
-	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018204820-ab5376058799
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.0.0-20241018205106-33293996e59c
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/component v0.103.0
 	go.uber.org/goleak v1.3.0
