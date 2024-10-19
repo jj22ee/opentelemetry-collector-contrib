@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib
+module github.com/jj22ee/opentelemetry-collector-contrib
 
 // NOTE:
 // This go.mod is NOT used to build any official binary.
@@ -85,7 +85,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricsgenerationprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/metricstransformprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.103.0
+	github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/routingprocessor v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v0.103.0
@@ -1009,7 +1009,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/metr
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor => ./processor/probabilisticsamplerprocessor/
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor => ./processor/resourcedetectionprocessor/
+replace github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor => ./processor/resourcedetectionprocessor/
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor => ./processor/resourceprocessor/
 
