@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/streams"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/streams"
 )
 
 func TestStaleness(t *testing.T) {

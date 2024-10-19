@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package openshift // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/openshift"
+package openshift // import "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/openshift"
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 	conventions "go.opentelemetry.io/collector/semconv/v1.18.0"
 	"go.uber.org/zap"
 
-	ocp "github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/openshift"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/openshift/internal/metadata"
+	ocp "github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/openshift"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/openshift/internal/metadata"
 )
 
 const (

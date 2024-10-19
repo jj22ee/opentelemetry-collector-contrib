@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package filterset // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset"
+package filterset // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset"
 
 import (
 	"fmt"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset/strict"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset/strict"
 )
 
 // MatchType describes the type of pattern matching a FilterSet uses to filter strings.

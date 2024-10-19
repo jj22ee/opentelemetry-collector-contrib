@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package ecsutiltest // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil/ecsutiltest"
+package ecsutiltest // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/ecsutil/ecsutiltest"
 
 import (
 	_ "embed"
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil/endpoints"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/ecsutil/endpoints"
 )
 
 //go:embed testdata/container_metadata.json

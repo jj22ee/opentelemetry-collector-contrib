@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package sanitize // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/sanitize"
+package sanitize // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/common/sanitize"
 
 import (
 	"net/url"

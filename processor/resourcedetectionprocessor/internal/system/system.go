@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package system // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/system"
+package system // import "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/system"
 
 import (
 	"context"
@@ -17,9 +17,9 @@ import (
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/system"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/system/internal/metadata"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/system"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/system/internal/metadata"
 )
 
 var (

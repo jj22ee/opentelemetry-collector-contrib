@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package filterlog // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterlog"
+package filterlog // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterlog"
 
 import (
 	"go.opentelemetry.io/collector/pdata/plog"

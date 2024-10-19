@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package internal // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
+package internal // import "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
 
 import (
 	"context"

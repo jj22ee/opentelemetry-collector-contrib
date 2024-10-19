@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/internal/tools
+module github.com/jj22ee/opentelemetry-collector-contrib/internal/tools
 
 go 1.22.5
 

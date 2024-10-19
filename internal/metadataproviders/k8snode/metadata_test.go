@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/k8sconfig"
 )
 
 func TestNewProvider(t *testing.T) {

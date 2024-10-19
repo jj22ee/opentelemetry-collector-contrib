@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	conventions "go.opentelemetry.io/collector/semconv/v1.9.0"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest/pmetrictest"
 )

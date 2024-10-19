@@ -3,4 +3,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package ecsutil provides a common task metadata definition and client for ECS environments
-package ecsutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil"
+package ecsutil // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/ecsutil"

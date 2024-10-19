@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package filterconfig // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterconfig"
+package filterconfig // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterconfig"
 
 import (
 	"errors"
@@ -11,9 +11,9 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/traceutil"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal/traceutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
 )
 
 // MatchConfig has two optional MatchProperties one to define what is processed

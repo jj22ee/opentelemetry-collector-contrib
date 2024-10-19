@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package gcp // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/gcp"
+package gcp // import "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/gcp"
 
 import (
 	"context"
@@ -13,9 +13,9 @@ import (
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/testutil"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
-	localMetadata "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/gcp/internal/metadata"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/common/testutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
+	localMetadata "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/gcp/internal/metadata"
 )
 
 func TestDetect(t *testing.T) {

@@ -13,8 +13,8 @@ import (
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/consul"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/consul/internal/metadata"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/consul"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/consul/internal/metadata"
 )
 
 var _ consul.Provider = (*mockMetadata)(nil)

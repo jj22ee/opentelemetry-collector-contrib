@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/filterset/regexp"
 )
 
 func readTestdataConfigYamls(t *testing.T, filename string) map[string]*Config {

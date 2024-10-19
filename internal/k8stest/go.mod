@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8stest
+module github.com/jj22ee/opentelemetry-collector-contrib/internal/k8stest
 
 go 1.22.5
 

@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package staleness // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/staleness"
+package staleness // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/staleness"
 
 import (
 	"container/heap"
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"
 )
 
 // PriorityQueue represents a way to store entries sorted by their priority.

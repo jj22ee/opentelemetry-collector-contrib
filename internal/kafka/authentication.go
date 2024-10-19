@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package kafka // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/kafka"
+package kafka // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/kafka"
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/IBM/sarama"
 	"go.opentelemetry.io/collector/config/configtls"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/kafka/awsmsk"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/kafka/awsmsk"
 )
 
 // Authentication defines authentication.

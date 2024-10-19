@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package k8sutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
+package k8sutil // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
 
 import (
 	"fmt"

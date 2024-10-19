@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package maps // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/maps"
+package maps // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/common/maps"
 
 // MergeRawMaps merges n maps with a later map's keys overriding earlier maps.
 func MergeRawMaps(maps ...map[string]any) map[string]any {

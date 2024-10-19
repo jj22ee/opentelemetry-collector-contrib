@@ -1,11 +1,11 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy
+module github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/proxy
 
 go 1.22.4
 
 require (
 	github.com/aws/aws-sdk-go v1.53.11
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.103.0
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/common v0.103.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/config/confignet v0.103.0
 	go.opentelemetry.io/collector/config/configtls v0.103.0
@@ -28,9 +28,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ../../../internal/aws/awsutil
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil => ../../../internal/aws/awsutil
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/common => ../../../internal/common
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/common => ../../../internal/common
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../../override/aws
 

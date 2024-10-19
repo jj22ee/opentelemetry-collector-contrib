@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package docker // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/docker"
+package docker // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/docker"
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/docker/docker/client"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/internal"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/internal"
 )
 
 type Provider interface {

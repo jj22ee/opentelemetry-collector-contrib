@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package ecsutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil"
+package ecsutil // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/ecsutil"
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.uber.org/zap"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/sanitize"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/common/sanitize"
 )
 
 // Client defines the basic HTTP client interface with GET response validation and content parsing

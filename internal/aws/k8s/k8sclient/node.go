@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package k8sclient // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s/k8sclient"
+package k8sclient // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/k8s/k8sclient"
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
 )
 
 const (

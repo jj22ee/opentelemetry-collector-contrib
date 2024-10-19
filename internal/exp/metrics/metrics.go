@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package metrics // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics"
+package metrics // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics"
 
 import (
 	"go.opentelemetry.io/collector/pdata/pmetric"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/streams"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/streams"
 )
 
 // Merge will merge the metrics data in mdB into mdA, then return mdA.

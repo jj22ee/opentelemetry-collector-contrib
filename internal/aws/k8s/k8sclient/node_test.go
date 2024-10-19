@@ -15,7 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/k8s/k8sutil"
 )
 
 var nodeArray = []any{

@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package splunk // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/splunk"
+package splunk // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/splunk"
 
 import (
 	"encoding/json"

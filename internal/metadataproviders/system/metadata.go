@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package system // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/system"
+package system // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/system"
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/sdk/resource"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/internal"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/internal"
 )
 
 // nameInfoProvider abstracts domain name resolution so it can be swapped for

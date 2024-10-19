@@ -1,11 +1,11 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter
+module github.com/jj22ee/opentelemetry-collector-contrib/internal/filter
 
 go 1.22.5
 
 require (
 	github.com/expr-lang/expr v1.16.9
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.103.0
+	github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.103.0
 	github.com/stretchr/testify v1.9.0
@@ -62,7 +62,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal => ../coreinternal
+replace github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal => ../coreinternal
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/ottl => ../../pkg/ottl
 

@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package ttlmap // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/ttlmap"
+package ttlmap // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/common/ttlmap"
 
 import (
 	"sync"

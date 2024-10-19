@@ -1,12 +1,12 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package streams // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/streams"
+package streams // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/streams"
 
 import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"
 )
 
 // Sequence of streams that can be iterated upon

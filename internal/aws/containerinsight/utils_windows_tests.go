@@ -4,7 +4,7 @@
 //go:build windows
 // +build windows
 
-package containerinsight // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight"
+package containerinsight // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/containerinsight"
 
 import (
 	"testing"

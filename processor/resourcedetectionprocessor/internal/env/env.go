@@ -5,7 +5,7 @@
 // the OTEL_RESOURCE environment variable. A list of labels of the form
 // `<key1>=<value1>,<key2>=<value2>,...` is accepted. Domain names and
 // paths are accepted as label keys.
-package env // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/env"
+package env // import "github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal/env"
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/processor"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
+	"github.com/jj22ee/opentelemetry-collector-contrib/processor/resourcedetectionprocessor/internal"
 )
 
 // TypeStr is type of detector.

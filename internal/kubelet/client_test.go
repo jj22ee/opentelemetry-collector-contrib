@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/k8sconfig"
 )
 
 const certPath = "./testdata/testcert.crt"

@@ -6,7 +6,7 @@
 // To do this we define a `registerOrLoad` helper and try to register the gate in both modules.
 // IMPORTANT NOTE: ANY CHANGES TO THIS PACKAGE MUST BE MIRRORED IN THE CORE COUNTERPART.
 // See https://github.com/open-telemetry/opentelemetry-collector/blob/main/internal/localhostgate/featuregate.go
-package localhostgate // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/localhostgate"
+package localhostgate // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/common/localhostgate"
 
 import (
 	"errors"

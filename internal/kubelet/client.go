@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package kubelet // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/kubelet"
+package kubelet // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/kubelet"
 
 import (
 	"crypto/tls"
@@ -19,8 +19,8 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/sanitize"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/common/sanitize"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/k8sconfig"
 )
 
 const (

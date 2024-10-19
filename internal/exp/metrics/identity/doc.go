@@ -5,4 +5,4 @@
 //
 // Use the `Of*(T) -> I` functions to obtain a unique, comparable (==) and
 // hashable (map key) identity value I for T.
-package identity // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+package identity // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"

@@ -9,7 +9,7 @@ package kubelet
 import (
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/containerinsight"
 
 	"github.com/stretchr/testify/assert"
 )

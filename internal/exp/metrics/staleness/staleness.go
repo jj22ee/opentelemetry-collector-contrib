@@ -1,13 +1,13 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package staleness // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/staleness"
+package staleness // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/staleness"
 
 import (
 	"time"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/identity"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics/streams"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/identity"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/exp/metrics/streams"
 )
 
 // We override how Now() is returned, so we can have deterministic tests

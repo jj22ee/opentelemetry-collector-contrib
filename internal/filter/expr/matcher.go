@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package expr // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter/expr"
+package expr // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/filter/expr"
 
 import (
 	"context"

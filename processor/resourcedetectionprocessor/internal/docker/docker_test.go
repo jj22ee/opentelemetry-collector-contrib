@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/collector/processor/processortest"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/docker"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/docker"
 )
 
 var _ docker.Provider = (*mockMetadata)(nil)

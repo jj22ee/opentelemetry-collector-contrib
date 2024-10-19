@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package traceutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/traceutil"
+package traceutil // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/coreinternal/traceutil"
 
 import (
 	"encoding/hex"

@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package k8snode // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/metadataproviders/k8snode"
+package k8snode // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/metadataproviders/k8snode"
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig"
+	"github.com/jj22ee/opentelemetry-collector-contrib/internal/k8sconfig"
 )
 
 type Provider interface {

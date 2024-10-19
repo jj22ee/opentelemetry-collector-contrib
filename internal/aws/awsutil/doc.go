@@ -3,4 +3,4 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package awsutil provides the common utils for AWS components
-package awsutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
+package awsutil // import "github.com/jj22ee/opentelemetry-collector-contrib/internal/aws/awsutil"
