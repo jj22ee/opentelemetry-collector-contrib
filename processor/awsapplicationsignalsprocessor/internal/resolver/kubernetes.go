@@ -593,15 +593,33 @@ func newKubernetesResourceAttributesResolver(platformCode, clusterName string) *
 		attributeMap: DefaultInheritedAttributes,
 	}
 }
+
+// HERE
 func (h *kubernetesResourceAttributesResolver) Process(attributes, resourceAttributes pcommon.Map) error {
 	for attrKey, mappingKey := range h.attributeMap {
 		if val, ok := resourceAttributes.Get(attrKey); ok {
 			attributes.PutStr(mappingKey, val.AsString())
 		}
 	}
+
 	if h.platformCode == config.PlatformEKS {
+
+		clusterName := "test_unset"
+
 		attributes.PutStr(common.AttributePlatformType, AttributePlatformEKS)
-		attributes.PutStr(common.AttributeEKSClusterName, h.clusterName)
+
+		if val, ok := attributes.Get(attr.ResourceDetectionClusterName); ok {
+			clusterName = val.Str() + "-1"
+		}
+		if val, ok := resourceAttributes.Get(attr.ResourceDetectionClusterName); ok {
+			clusterName = val.Str() + "-2"
+		}
+
+		if clusterName == "test_unset" {
+			clusterName = h.clusterName
+		}
+
+		attributes.PutStr(common.AttributeEKSClusterName, clusterName)
 	} else {
 		attributes.PutStr(common.AttributePlatformType, AttributePlatformK8S)
 		attributes.PutStr(common.AttributeK8SClusterName, h.clusterName)
