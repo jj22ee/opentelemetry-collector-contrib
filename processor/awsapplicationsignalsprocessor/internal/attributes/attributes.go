@@ -23,7 +23,8 @@ const (
 	AWSECSTaskID      = "aws.ecs.task.id"
 
 	// resource detection processor attributes
-	ResourceDetectionHostId   = "host.id"
-	ResourceDetectionHostName = "host.name"
-	ResourceDetectionASG      = "ec2.tag.aws:autoscaling:groupName"
+	ResourceDetectionHostId      = "host.id"
+	ResourceDetectionHostName    = "host.name"
+	ResourceDetectionASG         = "ec2.tag.aws:autoscaling:groupName"
+	ResourceDetectionClusterName = "k8s.cluster.name"
 )
