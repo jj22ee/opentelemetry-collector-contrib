@@ -60,7 +60,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/zipkinexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/ackextension v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/asapauthextension v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/extension/awsproxy v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/bearertokenauthextension v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/encoding/jaegerencodingextension v0.103.0
@@ -874,8 +873,6 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/splun
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/collectdreceiver => ../../receiver/collectdreceiver
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor => ../../processor/spanprocessor
-
-replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/awsproxy => ../../extension/awsproxy
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/zipkin => ../../pkg/translator/zipkin
 

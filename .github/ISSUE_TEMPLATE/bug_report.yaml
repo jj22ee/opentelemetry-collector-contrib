@@ -82,7 +82,6 @@ body:
       - exporter/zipkin
       - extension/ack
       - extension/asapauth
-      - extension/awsproxy
       - extension/basicauth
       - extension/bearertokenauth
       - extension/encoding

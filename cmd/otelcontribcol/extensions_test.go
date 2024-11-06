@@ -154,10 +154,6 @@ func TestDefaultExtensions(t *testing.T) {
 			},
 		},
 		{
-			extension:     "awsproxy",
-			skipLifecycle: true, // Requires EC2 metadata service to be running
-		},
-		{
 			extension: "http_forwarder",
 			getConfigFn: func() component.Config {
 				cfg := extFactories["http_forwarder"].CreateDefaultConfig().(*httpforwarderextension.Config)

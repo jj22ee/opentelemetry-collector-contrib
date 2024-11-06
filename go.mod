@@ -57,7 +57,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/tencentcloudlogserviceexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/zipkinexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/asapauthextension v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/extension/awsproxy v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/bearertokenauthextension v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/headerssetterextension v0.103.0
@@ -913,8 +912,6 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/elast
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/zipkinexporter => ./exporter/zipkinexporter
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/asapauthextension => ./extension/asapauthextension
-
-replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/awsproxy => ./extension/awsproxy
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/basicauthextension => ./extension/basicauthextension
 
