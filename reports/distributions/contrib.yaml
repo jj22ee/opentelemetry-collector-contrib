@@ -14,7 +14,6 @@ components:
         - spanmetrics
     exporter:
         - alibabacloud_logservice
-        - awscloudwatchlogs
         - awsemf
         - awskinesis
         - awss3

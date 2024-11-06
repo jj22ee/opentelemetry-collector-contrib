@@ -20,7 +20,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/connector/spanmetricsconnector v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alertmanagerexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter v0.103.0
@@ -1155,8 +1154,6 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/apach
 replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/httpforwarderextension => ../../extension/httpforwarderextension
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/elasticsearchexporter => ../../exporter/elasticsearchexporter
-
-replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter => ../../exporter/awscloudwatchlogsexporter
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/googlecloudspannerreceiver => ../../receiver/googlecloudspannerreceiver
 

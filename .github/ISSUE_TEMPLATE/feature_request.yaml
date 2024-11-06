@@ -31,7 +31,6 @@ body:
       - examples/demo
       - exporter/alertmanager
       - exporter/alibabacloudlogservice
-      - exporter/awscloudwatchlogs
       - exporter/awsemf
       - exporter/awskinesis
       - exporter/awss3

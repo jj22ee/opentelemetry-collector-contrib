@@ -34,7 +34,6 @@ import (
 	spanmetricsconnector "github.com/open-telemetry/opentelemetry-collector-contrib/connector/spanmetricsconnector"
 	alertmanagerexporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alertmanagerexporter"
 	alibabacloudlogserviceexporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter"
-	awscloudwatchlogsexporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter"
 	awskinesisexporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter"
 	awss3exporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter"
 	azuredataexplorerexporter "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter"
@@ -358,7 +357,6 @@ func components() (otelcol.Factories, error) {
 		otlphttpexporter.NewFactory(),
 		alertmanagerexporter.NewFactory(),
 		alibabacloudlogserviceexporter.NewFactory(),
-		awscloudwatchlogsexporter.NewFactory(),
 		awsemfexporter.NewFactory(),
 		awskinesisexporter.NewFactory(),
 		awss3exporter.NewFactory(),

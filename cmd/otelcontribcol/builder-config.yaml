@@ -58,7 +58,6 @@ exporters:
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.103.0
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alertmanagerexporter v0.103.0
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter v0.103.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter v0.103.0
   - gomod: github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter v0.103.0
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter v0.103.0
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter v0.103.0
@@ -403,7 +402,6 @@ replaces:
   - github.com/open-telemetry/opentelemetry-collector-contrib/receiver/apachesparkreceiver => ../../receiver/apachesparkreceiver
   - github.com/open-telemetry/opentelemetry-collector-contrib/extension/httpforwarderextension => ../../extension/httpforwarderextension
   - github.com/open-telemetry/opentelemetry-collector-contrib/exporter/elasticsearchexporter => ../../exporter/elasticsearchexporter
-  - github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter => ../../exporter/awscloudwatchlogsexporter
   - github.com/open-telemetry/opentelemetry-collector-contrib/receiver/googlecloudspannerreceiver => ../../receiver/googlecloudspannerreceiver
   - github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver => ../../receiver/prometheusreceiver
   - github.com/open-telemetry/opentelemetry-collector-contrib/exporter/sapmexporter => ../../exporter/sapmexporter

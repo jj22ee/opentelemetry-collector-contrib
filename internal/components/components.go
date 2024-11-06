@@ -31,7 +31,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/connector/servicegraphconnector"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/connector/spanmetricsconnector"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuremonitorexporter"
@@ -311,7 +310,6 @@ func Components() (otelcol.Factories, error) {
 
 	exporters := []exporter.Factory{
 		alibabacloudlogserviceexporter.NewFactory(),
-		awscloudwatchlogsexporter.NewFactory(),
 		awsemfexporter.NewFactory(),
 		awskinesisexporter.NewFactory(),
 		awsxrayexporter.NewFactory(),

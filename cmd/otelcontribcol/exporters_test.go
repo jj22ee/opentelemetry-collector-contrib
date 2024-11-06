@@ -31,7 +31,6 @@ import (
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alertmanagerexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuremonitorexporter"
@@ -82,20 +81,6 @@ func TestDefaultExporters(t *testing.T) {
 		skipLifecycle    bool
 		expectConsumeErr bool
 	}{
-		{
-			exporter: "awscloudwatchlogs",
-			getConfigFn: func() component.Config {
-				cfg := expFactories["awscloudwatchlogs"].CreateDefaultConfig().(*awscloudwatchlogsexporter.Config)
-				cfg.Endpoint = "http://" + endpoint
-				cfg.Region = "local"
-
-				// disable queue/retry to validate passing the test data synchronously
-				cfg.QueueSettings.Enabled = false
-				cfg.BackOffConfig.Enabled = false
-				return cfg
-			},
-			expectConsumeErr: true,
-		},
 		{
 			exporter:         "awss3",
 			expectConsumeErr: true,
