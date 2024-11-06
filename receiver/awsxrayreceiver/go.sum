@@ -52,8 +52,6 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
-github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 h1:5qUYEJ7+5arpfhs+CHneUMAk+9JejSfc5ZjrIX7lYbY=
-github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0/go.mod h1:maGxmHeBBqZtTpzON9gIM22xyj2VmzH0dfaH1aoP9yI=
 github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 h1:hiJKqNVstgyqbpcssIbv5xFV6DC+Ai1ExogAFi4DQWo=
 github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0/go.mod h1:Vfx/IG1rqeijFEYzYyNRTb7OXNDVup5NE9Y3u5j8PF4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

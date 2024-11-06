@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20241024160840-0c7076070f12 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
@@ -28,6 +29,8 @@ require (
 )
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/common => ../../../internal/common
+
+replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ../../../internal/aws/awsutil
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../../override/aws
 
