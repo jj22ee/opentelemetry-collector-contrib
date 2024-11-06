@@ -195,7 +195,6 @@ body:
       - receiver/apachespark
       - receiver/awscloudwatch
       - receiver/awscloudwatchmetrics
-      - receiver/awscontainerinsight
       - receiver/awsecscontainermetrics
       - receiver/awsfirehose
       - receiver/awss3
