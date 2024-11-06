@@ -199,7 +199,6 @@ body:
       - receiver/awsecscontainermetrics
       - receiver/awsfirehose
       - receiver/awss3
-      - receiver/awsxray
       - receiver/azureblob
       - receiver/azureeventhub
       - receiver/azuremonitor
