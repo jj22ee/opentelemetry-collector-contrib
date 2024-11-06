@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package translator // import "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
+package translator // import "github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
 
 import (
 	"strconv"

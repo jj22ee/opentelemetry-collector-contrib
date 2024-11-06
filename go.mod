@@ -20,9 +20,9 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/connector/spanmetricsconnector v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuremonitorexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/carbonexporter v0.103.0
@@ -839,11 +839,11 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/aliba
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter => ./exporter/awscloudwatchlogsexporter
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter => ./exporter/awsemfexporter
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter => ./exporter/awsemfexporter
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter => ./exporter/awskinesisexporter
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter => ./exporter/awsxrayexporter
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter => ./exporter/awsxrayexporter
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter => ./exporter/azuredataexplorerexporter
 

@@ -59,7 +59,7 @@ func getModVersion() string {
 	}
 
 	for _, mod := range info.Deps {
-		if mod.Path == "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter" {
+		if mod.Path == "github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter" {
 			return mod.Version
 		}
 	}
