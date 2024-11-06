@@ -572,7 +572,6 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/collectd v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/common v0.103.0 // indirect
@@ -808,8 +807,6 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/e
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s => ./internal/aws/k8s
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics => ./internal/aws/metrics
-
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy => ./internal/aws/proxy
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray => ./internal/aws/xray
 

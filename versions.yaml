@@ -112,7 +112,6 @@ module-sets:
       - github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil
       - github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s
       - github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics
-      - github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy
       - github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray
       - github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/testdata/sampleapp
       - github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/testdata/sampleserver
