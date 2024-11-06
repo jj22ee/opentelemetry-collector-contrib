@@ -6,7 +6,7 @@ package awscontainerinsightreceiver // import "github.com/open-telemetry/opentel
 import (
 	"time"
 
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
 )
 
 // Config defines configuration for aws ecs container metrics receiver.
