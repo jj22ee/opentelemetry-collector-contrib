@@ -6,13 +6,11 @@ package awsemfexporter // import "github.com/amazon-contributing/opentelemetry-c
 import (
 	"strings"
 
-	"go.opentelemetry.io/collector/component"
-	"go.uber.org/zap"
-
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
-
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry"
+	"go.opentelemetry.io/collector/component"
+	"go.uber.org/zap"
 )
 
 var (

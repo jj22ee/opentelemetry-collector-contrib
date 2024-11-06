@@ -4,11 +4,10 @@
 package translator // import "github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
 
 import (
+	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
-
-	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 func makeSQL(span ptrace.Span, attributes map[string]pcommon.Value) (map[string]pcommon.Value, *awsxray.SQLData) {

@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -24,10 +27,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
 	"go.uber.org/zap"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
 )
 
 func TestTraceExport(t *testing.T) {

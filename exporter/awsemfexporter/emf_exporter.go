@@ -10,7 +10,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/collector/component"
@@ -19,10 +22,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/appsignals"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
 
 const (

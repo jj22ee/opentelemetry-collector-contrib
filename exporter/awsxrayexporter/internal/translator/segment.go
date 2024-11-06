@@ -14,13 +14,12 @@ import (
 	"strings"
 	"time"
 
+	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 	awsP "github.com/aws/aws-sdk-go/aws"
 	"go.opentelemetry.io/collector/featuregate"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	conventions "go.opentelemetry.io/collector/semconv/v1.8.0"
-
-	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 // AWS X-Ray acceptable values for origin field.

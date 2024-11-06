@@ -9,7 +9,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/xray"
 	"go.opentelemetry.io/collector/component"
@@ -19,11 +23,6 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.opentelemetry.io/collector/pdata/ptrace/ptraceotlp"
 	"go.uber.org/zap"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter/internal/translator"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
-	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
 )
 
 const (

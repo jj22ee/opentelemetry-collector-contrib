@@ -7,11 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 	"github.com/aws/aws-sdk-go/aws"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	conventions "go.opentelemetry.io/collector/semconv/v1.6.1"
-
-	awsxray "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray"
 )
 
 func makeAws(attributes map[string]pcommon.Value, resource pcommon.Resource, logGroupNames []string) (map[string]pcommon.Value, *awsxray.AWSData) {

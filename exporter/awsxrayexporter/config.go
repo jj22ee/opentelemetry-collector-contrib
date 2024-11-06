@@ -4,10 +4,9 @@
 package awsxrayexporter // import "github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter"
 
 import (
-	"go.opentelemetry.io/collector/component"
-
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry"
+	"go.opentelemetry.io/collector/component"
 )
 
 // Config defines configuration for AWS X-Ray exporter.

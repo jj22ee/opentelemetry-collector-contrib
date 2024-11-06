@@ -11,12 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
+	aws "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
-	aws "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 )
 
 const (

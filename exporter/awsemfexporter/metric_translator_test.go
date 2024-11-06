@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -20,8 +21,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
 
 // Copied from "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/coreinternal/occonventions"
@@ -132,7 +131,7 @@ func stringSlicesEqual(expected, actual []string) bool {
 	return true
 }
 
-func min(i, j int) int {
+func customMin(i, j int) int {
 	if i < j {
 		return i
 	}
@@ -153,7 +152,7 @@ func (d dimensionality) Less(i, j int) bool {
 	dim1 := d[i]
 	dim2 := d[j]
 
-	for k := 0; k < min(len(dim1), len(dim2)); k++ {
+	for k := 0; k < customMin(len(dim1), len(dim2)); k++ {
 		if dim1[k] != dim2[k] {
 			return dim1[k] < dim2[k]
 		}

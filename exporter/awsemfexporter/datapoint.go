@@ -9,12 +9,11 @@ import (
 	"strconv"
 	"time"
 
+	aws "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
-
-	aws "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 )
 
 const (

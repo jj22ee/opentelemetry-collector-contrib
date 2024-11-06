@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,8 +22,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 )
 
 const defaultRetryCount = 1

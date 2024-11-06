@@ -6,16 +6,14 @@ package awsemfexporter // import "github.com/amazon-contributing/opentelemetry-c
 import (
 	"context"
 
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/metadata"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"go.opentelemetry.io/collector/featuregate"
 	"go.uber.org/zap"
-
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/metadata"
-	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
-
-	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry"
 )
 
 var defaultNoRollupfg = featuregate.GlobalRegistry().MustRegister("awsemf.nodimrollupdefault", featuregate.StageAlpha,
