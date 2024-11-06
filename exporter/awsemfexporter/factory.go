@@ -14,6 +14,7 @@ import (
 
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter/internal/metadata"
 	"github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
+
 	"github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry"
 )
 

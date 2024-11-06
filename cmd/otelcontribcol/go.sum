@@ -2000,6 +2000,14 @@ github.com/onsi/gomega v1.31.0/go.mod h1:DW9aCi7U6Yi40wNVAvT6kzFnEVEI5n3DloYBiKi
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
 github.com/open-telemetry/opamp-go v0.15.0 h1:X2TWhEsGQ8GP7Uos3Ic9v/1aFUqoECZXKS7xAF5HqsA=
 github.com/open-telemetry/opamp-go v0.15.0/go.mod h1:QyPeN56JXlcZt5yG5RMdZ50Ju+zMFs1Ihy/hwHyF8Oo=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 h1:5qUYEJ7+5arpfhs+CHneUMAk+9JejSfc5ZjrIX7lYbY=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0/go.mod h1:maGxmHeBBqZtTpzON9gIM22xyj2VmzH0dfaH1aoP9yI=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 h1:tXcnLo7Y1kUPW7o1+yGW8Ca6oAqXAXn29/mlQkX+MmQ=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0/go.mod h1:3jSKK7tOooEL9n4rT9vrqBuufFIbTQuqap9hnUPn8WA=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 h1:zsfP29smagu0yh4nan/xq2WKYOegjNvSrbj6mTErnaA=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0/go.mod h1:8IP4A6OLAjEqKAl6zuwzFSUI+iH8eCkpkV2aRyd+guk=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 h1:hiJKqNVstgyqbpcssIbv5xFV6DC+Ai1ExogAFi4DQWo=
+github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0/go.mod h1:Vfx/IG1rqeijFEYzYyNRTb7OXNDVup5NE9Y3u5j8PF4=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=

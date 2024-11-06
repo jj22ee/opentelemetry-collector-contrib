@@ -5,6 +5,8 @@ module github.com/open-telemetry/opentelemetry-collector-contrib/cmd/otelcontrib
 go 1.22.5
 
 require (
+	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/confmap/provider/s3provider v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/confmap/provider/secretsmanagerprovider v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/connector/countconnector v0.103.0
@@ -19,10 +21,8 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alertmanagerexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter v0.103.0
-	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsemfexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awskinesisexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awss3exporter v0.103.0
-	github.com/amazon-contributing/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuredataexplorerexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/azuremonitorexporter v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/carbonexporter v0.103.0
@@ -370,7 +370,11 @@ require (
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
 	github.com/aliyun/aliyun-log-go-sdk v0.1.76 // indirect
 	github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware v0.0.0-20240419190856-2f880467f335 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20240415183253-230331014d2c // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20241024160840-0c7076070f12 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apache/arrow/go/v15 v15.0.0 // indirect
 	github.com/apache/pulsar-client-go v0.8.1 // indirect
@@ -609,14 +613,14 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/encoding v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/opampcustommessages v0.103.0 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight v0.103.0 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s v0.103.0 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy v0.103.0 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/collectd v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/docker v0.103.0 // indirect
