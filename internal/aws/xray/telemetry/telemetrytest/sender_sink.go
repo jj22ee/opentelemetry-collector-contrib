@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package telemetrytest // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
+package telemetrytest // import "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray/telemetry/telemetrytest"
 
 import (
 	"sync/atomic"

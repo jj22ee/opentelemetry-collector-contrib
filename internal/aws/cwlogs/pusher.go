@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package cwlogs // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
+package cwlogs // import "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs"
 
 import (
 	"errors"

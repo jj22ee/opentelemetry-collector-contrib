@@ -7,8 +7,8 @@ require (
 	github.com/aws/aws-sdk-go v1.53.11
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/google/uuid v1.6.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/collector/component v0.103.0
 	go.opentelemetry.io/collector/config/configretry v0.103.0
@@ -68,9 +68,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../override/aws
 

@@ -609,14 +609,14 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/encoding v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/observer v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/opampcustommessages v0.103.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight v0.103.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/ecsutil v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s v0.103.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/proxy v0.103.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/collectd v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.103.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/docker v0.103.0 // indirect
@@ -828,7 +828,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/stor
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/batchpersignal => ../../pkg/batchpersignal
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/cwlogs => ../../internal/aws/cwlogs
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/common => ../../internal/common
 
@@ -932,7 +932,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipki
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver => ../../receiver/jaegerreceiver
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/xray => ../../internal/aws/xray
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/xray => ../../internal/aws/xray
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s => ../../internal/aws/k8s
 
@@ -978,7 +978,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/extension/ppro
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/loki => ../../pkg/translator/loki
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics => ../../internal/aws/metrics
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics => ../../internal/aws/metrics
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/journaldreceiver => ../../receiver/journaldreceiver
 
@@ -1096,7 +1096,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/datas
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight => ../../internal/aws/containerinsight
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil => ../../internal/aws/awsutil
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zookeeperreceiver => ../../receiver/zookeeperreceiver
 

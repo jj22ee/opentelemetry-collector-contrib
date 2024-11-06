@@ -10,7 +10,7 @@ import (
 	cinfo "github.com/google/cadvisor/info/v1"
 
 	ci "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight"
-	awsmetrics "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics"
+	awsmetrics "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver/internal/stores"
 )
 

@@ -8,7 +8,7 @@ package extractors // import "github.com/open-telemetry/opentelemetry-collector-
 
 import (
 	ci "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight"
-	awsmetrics "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics"
+	awsmetrics "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics"
 	cExtractor "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver/internal/cadvisor/extractors"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/awscontainerinsightreceiver/internal/stores"
 

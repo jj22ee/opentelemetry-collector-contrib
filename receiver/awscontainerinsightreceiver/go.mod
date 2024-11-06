@@ -8,10 +8,10 @@ require (
 	github.com/aws/aws-sdk-go v1.53.11
 	github.com/go-kit/log v0.2.1
 	github.com/google/cadvisor v0.49.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s v0.103.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0
+	github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/k8sconfig v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/kubelet v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.0.0-00010101000000-000000000000
@@ -227,11 +227,11 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil => ./../../internal/aws/awsutil
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil => ./../../internal/aws/awsutil
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s => ./../../internal/aws/k8s
 
-replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/metrics => ./../../internal/aws/metrics
+replace github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/metrics => ./../../internal/aws/metrics
 
 replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight => ./../../internal/aws/containerinsight
 

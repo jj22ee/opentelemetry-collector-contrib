@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package awsutil // import "github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil"
+package awsutil // import "github.com/amazon-contributing/opentelemetry-collector-contrib/internal/aws/awsutil"
 
 import (
 	"time"
