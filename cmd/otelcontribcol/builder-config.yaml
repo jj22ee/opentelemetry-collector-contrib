@@ -461,7 +461,7 @@ replaces:
   - github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/skywalking => ../../pkg/translator/skywalking
   - github.com/open-telemetry/opentelemetry-collector-contrib/internal/collectd => ../../internal/collectd
   - github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware => ../../extension/awsmiddleware
-  - github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../override/aws
+  - github.com/jj22ee/opentelemetry-collector-contrib/override/aws => ../../override/aws
   # remove sourcegraph.com/sourcegraph/appdash dependency
   - github.com/go-kit/kit => github.com/go-kit/kit v0.12.0
   # see https://github.com/mongodb/mongo-go-driver/pull/1485 (v1.13.0 was retracted)

@@ -28,7 +28,6 @@ require (
 )
 
 require (
-	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.103.10 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.22.2 // indirect
 	github.com/aws/smithy-go v1.16.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -40,6 +39,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/hashicorp/go-version v1.7.0 // indirect
+	github.com/jj22ee/opentelemetry-collector-contrib/override/aws v0.103.10 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
@@ -90,7 +90,7 @@ retract (
 	v0.65.0
 )
 
-replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../override/aws
+replace github.com/jj22ee/opentelemetry-collector-contrib/override/aws => ../../override/aws
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware => ../../extension/awsmiddleware
 

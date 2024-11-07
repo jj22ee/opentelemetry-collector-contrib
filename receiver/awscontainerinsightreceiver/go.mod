@@ -4,10 +4,10 @@ go 1.22.5
 
 require (
 	github.com/Microsoft/hcsshim v0.12.0-rc.3
-	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.103.10
 	github.com/aws/aws-sdk-go v1.53.11
 	github.com/go-kit/log v0.2.1
 	github.com/google/cadvisor v0.49.0
+	github.com/jj22ee/opentelemetry-collector-contrib/override/aws v0.103.10
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/awsutil v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/containerinsight v0.103.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/k8s v0.103.0
@@ -256,7 +256,7 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prome
 // openshift removed all tags from their repo, use the pseudoversion from the release-3.9 branch HEAD
 replace github.com/openshift/api v3.9.0+incompatible => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
 
-replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ../../override/aws
+replace github.com/jj22ee/opentelemetry-collector-contrib/override/aws => ../../override/aws
 
 // see https://github.com/distribution/distribution/issues/3590
 exclude github.com/docker/distribution v2.8.0+incompatible

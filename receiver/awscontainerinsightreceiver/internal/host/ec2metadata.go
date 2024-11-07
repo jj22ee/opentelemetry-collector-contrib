@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	override "github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws"
+	override "github.com/jj22ee/opentelemetry-collector-contrib/override/aws"
 	"github.com/aws/aws-sdk-go/aws"
 	awsec2metadata "github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"

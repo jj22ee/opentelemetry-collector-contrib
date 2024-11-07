@@ -329,7 +329,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
 	github.com/aliyun/aliyun-log-go-sdk v0.1.76 // indirect
 	github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware v0.0.0-20240419190856-2f880467f335 // indirect
-	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.103.10 // indirect
+	github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws v0.0.0-20240415183253-230331014d2c // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/apache/arrow/go/v15 v15.0.0 // indirect
 	github.com/apache/pulsar-client-go v0.8.1 // indirect
@@ -508,6 +508,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jellydator/ttlcache/v3 v3.2.0 // indirect
+	github.com/jj22ee/opentelemetry-collector-contrib/override/aws v0.103.10 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -1248,4 +1249,4 @@ replace github.com/open-telemetry/opentelemetry-collector-contrib/internal/pdata
 
 replace github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awsmiddleware => ./extension/awsmiddleware
 
-replace github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws => ./override/aws
+replace github.com/jj22ee/opentelemetry-collector-contrib/override/aws => ./override/aws
