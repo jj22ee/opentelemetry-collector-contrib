@@ -1,4 +1,4 @@
-module github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws
+module github.com/jj22ee/opentelemetry-collector-contrib/override/aws
 
 go 1.20
 

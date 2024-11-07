@@ -13,7 +13,6 @@ import (
 	"os"
 	"time"
 
-	override "github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/client"
@@ -24,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	override "github.com/jj22ee/opentelemetry-collector-contrib/override/aws"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 )

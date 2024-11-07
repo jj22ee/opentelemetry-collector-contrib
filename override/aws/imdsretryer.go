@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package aws // import "github.com/amazon-contributing/opentelemetry-collector-contrib/override/aws"
+package aws // import "github.com/jj22ee/opentelemetry-collector-contrib/override/aws"
 
 import (
 	"errors"
