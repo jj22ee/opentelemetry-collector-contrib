@@ -42,7 +42,7 @@ type Config struct {
 	Tags map[string]*string `mapstructure:"tags,omitempty"`
 
 	// Queue settings frm the exporterhelper
-	exporterhelper.QueueSettings `mapstructure:"sending_queue"`
+	exporterhelper.QueueConfig `mapstructure:"sending_queue"`
 
 	awsutil.AWSSessionSettings `mapstructure:",squash"`
 
@@ -69,7 +69,7 @@ func (config *Config) Validate() error {
 		return errors.New("'log_stream_name' must be set")
 	}
 
-	if err := config.QueueSettings.Validate(); err != nil {
+	if err := config.QueueConfig.Validate(); err != nil {
 		return err
 	}
 	if retErr := cwlogs.ValidateRetentionValue(config.LogRetention); retErr != nil {
