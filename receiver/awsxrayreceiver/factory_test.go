@@ -44,9 +44,9 @@ func TestCreateTracesReceiver(t *testing.T) {
 	assert.Nil(t, err, "trace receiver can be created")
 }
 
-func TestCreateMetricsReceiver(t *testing.T) {
+func TestCreateMetrics(t *testing.T) {
 	factory := NewFactory()
-	_, err := factory.CreateMetricsReceiver(
+	_, err := factory.CreateMetrics(
 		context.Background(),
 		receivertest.NewNopSettings(),
 		factory.CreateDefaultConfig().(*Config),

@@ -35,7 +35,7 @@ func createDefaultConfig() component.Config {
 	return &Config{
 		BackOffConfig:      configretry.NewDefaultBackOffConfig(),
 		AWSSessionSettings: awsutil.CreateDefaultSessionConfig(),
-		QueueConfig:      QueueConfig,
+		QueueConfig:        QueueConfig,
 	}
 }
 
