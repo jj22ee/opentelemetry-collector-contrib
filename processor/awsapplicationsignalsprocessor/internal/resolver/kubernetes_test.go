@@ -922,8 +922,8 @@ func TestK8sResourceAttributesResolverOnEKS(t *testing.T) {
 				assert.Equal(t, val, getStrAttr(attributes, key, t), fmt.Sprintf("expected %s for key %s", val, key))
 			}
 
-			if val, ok := resourceAttributes.Get(attr.ResourceDetectionClusterName); ok && val.Str() != "" {
-				assert.Equal(t, "/aws/containerinsights/DetectedClusterName/application", getStrAttr(resourceAttributes, semconv.AttributeAWSLogGroupNames, t))
+			if val, ok := resourceAttributes.Get(attr.ResourceDetectionClusterName); ok {
+				assert.Equal(t, "/aws/containerinsights/"+val.Str()+"/application", getStrAttr(resourceAttributes, semconv.AttributeAWSLogGroupNames, t))
 			} else {
 				assert.Equal(t, "/aws/containerinsights/test-cluster/application", getStrAttr(resourceAttributes, semconv.AttributeAWSLogGroupNames, t))
 			}
@@ -931,18 +931,22 @@ func TestK8sResourceAttributesResolverOnEKS(t *testing.T) {
 	}
 }
 
-func TestGetResourceDetectorClusterName(t *testing.T) {
+func TestresolveResourceDetectorClusterName(t *testing.T) {
 	resolver := newKubernetesResourceAttributesResolver(config.PlatformEKS, "test-cluster")
 
 	resourceDetectorAttributes := pcommon.NewMap()
-	resourceDetectorClusterName := resolver.getResourceDetectorClusterName(resourceDetectorAttributes)
+	resourceDetectorClusterName := resolver.resolveResourceDetectorClusterName(resourceDetectorAttributes)
 	assert.Equal(t, resourceDetectorClusterName, "test-cluster")
+
 	resourceDetectorAttributes.PutStr(attr.ResourceDetectionClusterName, "DetectedClusterName")
-	resourceDetectorClusterName = resolver.getResourceDetectorClusterName(resourceDetectorAttributes)
+	resourceDetectorClusterName = resolver.resolveResourceDetectorClusterName(resourceDetectorAttributes)
 	assert.Equal(t, resourceDetectorClusterName, "DetectedClusterName")
+
 	resourceDetectorAttributes.PutStr(attr.ResourceDetectionClusterName, "")
-	resourceDetectorClusterName = resolver.getResourceDetectorClusterName(resourceDetectorAttributes)
+	resourceDetectorClusterName = resolver.resolveResourceDetectorClusterName(resourceDetectorAttributes)
 	assert.Equal(t, resourceDetectorClusterName, "test-cluster")
+	updatedClusterName, _ := resourceDetectorAttributes.Get(attr.ResourceDetectionClusterName)
+	assert.Equal(t, updatedClusterName.Str(), "test-cluster")
 }
 
 func TestK8sResourceAttributesResolverOnK8S(t *testing.T) {
