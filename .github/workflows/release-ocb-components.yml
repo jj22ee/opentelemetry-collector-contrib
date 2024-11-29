@@ -8,6 +8,10 @@ on:
         required: true
         description: Release candidate version (beta, like 0.70.0)
 
+
+permissions:
+  id-token: write
+
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
