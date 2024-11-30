@@ -8,9 +8,9 @@ on:
         required: true
         description: Release candidate version (beta, like 0.70.0)
 
-
 permissions:
   id-token: write
+  contents: read
 
 jobs:
   prepare-release:
@@ -56,19 +56,27 @@ jobs:
         shell: bash
         run: docker logout public.ecr.aws
 
-      - name: Build and push image according to input
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: ./ocb-utils/
-          file: ./ocb-utils/Dockerfile
-          platforms: linux/amd64
-          tags: ${{ secrets.ECR_REPO }}:${{ env.RELEASE_HASH }}
-          load: false
+      # - name: Build and push image according to input
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     push: true
+      #     context: ./ocb-utils/
+      #     file: ./ocb-utils/Dockerfile
+      #     platforms: linux/amd64
+      #     tags: ${{ secrets.ECR_REPO }}:${{ env.RELEASE_HASH }}
+      #     load: false
 
-      - name: trigger test in other repo
-        run: |
-          echo "hi"
+  trigger-test:
+    secrets: inherit
+    needs: [ prepare-release ]
+    uses: jj22ee/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
+    with:
+      aws-region: us-east-1
+      test-cluster-name: 'e2e-otel-collector-contrib-release-test'
+      caller-workflow-name: 'main-build-java-e2e-eks-otlp-ocb-canary-test'
+      java-version: '11'
+      e2e-otel-collector-image: public.ecr.aws/n7z4r8f9/otel-col-appsignals:fix-cluster
+
 
       # - name: if test passed, create tags PR
       #   run: |
