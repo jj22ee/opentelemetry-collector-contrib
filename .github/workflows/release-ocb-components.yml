@@ -12,6 +12,10 @@ permissions:
   id-token: write
   contents: read
 
+
+env:
+  ECR_REPO: ${{ secrets.ECR_REPO }}
+
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
@@ -66,6 +70,8 @@ jobs:
           platforms: linux/amd64
           tags: public.ecr.aws/n7z4r8f9/ocb-testing:${{ github.sha }} # ${{ secrets.ECR_REPO }}:${{ env.RELEASE_HASH }}
           load: false
+          cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
+          cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
   trigger-test:
     secrets: inherit
@@ -76,7 +82,7 @@ jobs:
       test-cluster-name: 'e2e-otel-collector-contrib-release-test'
       caller-workflow-name: 'main-build-java-e2e-eks-otlp-ocb-canary-test'
       java-version: '11'
-      e2e-otel-collector-image: public.ecr.aws/n7z4r8f9/ocb-testing:${{ github.sha }}
+      e2e-otel-collector-image: ${{ env.ECR_REPO }}:${{ github.sha }}
 
 
       # - name: if test passed, create tags PR
