@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: aws-ocb-dev
+          ref: aws-ocb-dev-workflows
 
       - name: get hash
         run: |
@@ -29,6 +29,7 @@ jobs:
       - name: build OCB
         run: |
           echo "hi"
+          echo "$(pwd)"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -59,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          context: .
+          context: ./ocb-utils/
           file: ./ocb-utils/Dockerfile
           platforms: linux/amd64
           tags: ${{ secrets.ECR_REPO }}:${{ env.RELEASE_HASH }}
