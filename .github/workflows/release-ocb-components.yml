@@ -19,8 +19,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: aws-ocb-dev
+
       - name: get hash
-        working-directory: .
         run: |
           RELEASE_HASH=$(git rev-parse HEAD)
           echo RELEASE_HASH="$RELEASE_HASH" >> $GITHUB_ENV
@@ -59,8 +59,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          context: ./ocb-utils/
-          file: ./Dockerfile
+          context: .
+          file: ./ocb-utils/Dockerfile
           platforms: linux/amd64
           tags: ${{ secrets.ECR_REPO }}:${{ env.RELEASE_HASH }}
           load: false
