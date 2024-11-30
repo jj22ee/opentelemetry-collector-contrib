@@ -68,7 +68,7 @@ jobs:
 
   trigger-test:
     secrets: inherit
-    needs: [ prepare-release ]
+    # needs: [ prepare-release ]
     uses: jj22ee/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
     with:
       aws-region: us-east-1
