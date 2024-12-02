@@ -83,7 +83,6 @@ jobs:
       java-version: '11'
       e2e-otel-collector-image: public.ecr.aws/n7z4r8f9/ocb-testing:${{ github.sha }}
 
-
       # - name: if test passed, create tags PR
       #   run: |
       #     echo "hi"
