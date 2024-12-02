@@ -1,4 +1,4 @@
-name: Automation - Release OLTP components
+name: Automation - Test and Release OLTP components
 
 on:
   push:
@@ -12,31 +12,21 @@ permissions:
   id-token: write
   contents: read
 
-
 env:
   ECR_REPO: ${{ secrets.ECR_REPO }}
 
 jobs:
-  prepare-release:
+  setup-test-for-prepare-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: aws-ocb-dev-workflows
 
-      - name: get hash
-        run: |
-          echo "${{ github.sha }}"
-
-      - name: build OCB
-        run: |
-          echo "hi"
-          echo "$(pwd)"
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ECR_ACCOUNT_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::${{ secrets.RELEASE_TEST_ACCOUNT_ID }}:role/${{ secrets.RELEASE_TEST_ACCOUNT_ROLE }}
           aws-region: us-east-1
 
       - name: Set up Docker Buildx
@@ -49,14 +39,11 @@ jobs:
         env:
           AWS_REGION: us-east-1
 
-      # Per https://docs.aws.amazon.com/AmazonECR/latest/public/docker-pull-ecr-image.html, it is possible to
-      # make unauthorized calls to get public ECR images (needed to build the ADOT Node docker image), but
-      # it can fail if you previously authenticated to a public repo. Adding this step to log out, so we
-      # ensure we can make unauthenticated call. This is important for making the pr_build workflow run on
-      # PRs created from forked repos.
-      - name: Logout of public AWS ECR
-        shell: bash
-        run: docker logout public.ecr.aws
+      - name: Tag package
+        run: git tag test/v0.0.2
+      - name: Publish tags
+        run: git push --tags
+
 
       - name: Build and push image according to input
         uses: docker/build-push-action@v5
@@ -70,22 +57,33 @@ jobs:
           cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
           cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
-  trigger-test:
-    secrets: inherit
-    needs: [ prepare-release ]
-    uses: jj22ee/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
-    with:
-      aws-region: us-east-1
-      test-cluster-name: 'e2e-otel-collector-contrib-release-test'
-      caller-workflow-name: 'main-build-java-e2e-eks-otlp-ocb-canary-test'
-      java-version: '11'
-      e2e-otel-collector-image-tag: ${{ github.sha }}
+  # ocb-e2e-test:
+  #   secrets: inherit
+  #   needs: [ prepare-release ]
+  #   uses: jj22ee/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
+  #   with:
+  #     aws-region: us-east-1
+  #     test-cluster-name: 'e2e-otel-collector-contrib-release-test'
+  #     caller-workflow-name: 'main-build-java-e2e-eks-otlp-ocb-canary-test'
+  #     java-version: '11'
+  #     e2e-otel-collector-image-tag: ${{ github.sha }}
 
+  # prepare-release:
+  #   runs-on: ubuntu-latest
+  #   needs: [ ocb-e2e-test ]
+  #   steps:
+  #     - name: Build and push image with latest tag
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         push: true
+  #         context: ./ocb-utils/
+  #         file: ./ocb-utils/Dockerfile
+  #         platforms: linux/amd64
+  #         tags: ${{ secrets.ECR_REPO }}:latest
+  #         load: false
+  #         cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
+  #         cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
-      # - name: if test passed, create tags PR
-      #   run: |
-      #     echo "hi"
-      
-      # - name: if test passed, upload OCB to staging repo with latest as tag
-      #   run: |
-      #     echo "hi"
+  #     - name: if test passed, create tags PR
+  #       run: |
+  #         echo "hi"
