@@ -101,20 +101,24 @@ jobs:
 
       - name: Load image
         run: |
+          docker image ls -a
           docker load --input /tmp/ocb_image.tar
           docker image ls -a
+          docker tag ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }} ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          docker image ls -a
+          docker push ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
 
-      - name: Build and push image with latest tag
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: ./ocb-utils/
-          file: ./ocb-utils/Dockerfile
-          platforms: linux/amd64
-          tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
-          load: false
-          cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
-          cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
+      # - name: Build and push image with latest tag
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     push: true
+      #     context: ./ocb-utils/
+      #     file: ./ocb-utils/Dockerfile
+      #     platforms: linux/amd64
+      #     tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+      #     load: false
+      #     cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
+      #     cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
       # - name: Tag OCB modules
       #   run: |
