@@ -12,9 +12,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  ECR_REPO: ${{ secrets.ECR_REPO }}
-
 jobs:
   setup-test-for-prepare-release:
     runs-on: ubuntu-latest
@@ -39,12 +36,6 @@ jobs:
         env:
           AWS_REGION: us-east-1
 
-      # - name: Tag package
-      #   run: git tag test/v0.0.2
-      # - name: Publish tags
-      #   run: git push --tags
-
-
       - name: Build and push image according to input
         uses: docker/build-push-action@v5
         with:
@@ -68,22 +59,27 @@ jobs:
       java-version: '11'
       e2e-otel-collector-image-tag: ${{ github.sha }}
 
-  # prepare-release:
-  #   runs-on: ubuntu-latest
-  #   needs: [ ocb-e2e-test ]
-  #   steps:
-  #     - name: Build and push image with latest tag
-  #       uses: docker/build-push-action@v5
-  #       with:
-  #         push: true
-  #         context: ./ocb-utils/
-  #         file: ./ocb-utils/Dockerfile
-  #         platforms: linux/amd64
-  #         tags: ${{ secrets.ECR_REPO }}:latest
-  #         load: false
-  #         cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
-  #         cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
+  prepare-release:
+    runs-on: ubuntu-latest
+    needs: [ ocb-e2e-test ]
+    steps:
+      - name: Build and push image with latest tag
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          context: ./ocb-utils/
+          file: ./ocb-utils/Dockerfile
+          platforms: linux/amd64
+          tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          load: false
+          cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
+          cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
   #     - name: if test passed, create tags PR
   #       run: |
   #         echo "hi"
+
+  #     - name: Tag package
+  #       run: git tag test/v0.0.2
+  #     - name: Publish tags
+  #       run: git push --tags
