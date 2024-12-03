@@ -4,7 +4,7 @@ on:
   push:
   workflow_dispatch:
     inputs:
-      candidate-version:
+      ocb-module-version:
         required: true
         description: Release candidate version (beta, like 0.70.0)
 
@@ -47,6 +47,13 @@ jobs:
           load: false
           cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
           cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
+          outputs: type=docker,dest=/tmp/ocb_image.tar
+
+      - name: Upload OCB Image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocb_image
+          path: /tmp/ocb_image.tar
 
   # ocb-e2e-test:
   #   secrets: inherit
@@ -86,6 +93,17 @@ jobs:
         env:
           AWS_REGION: us-east-1
 
+      - name: Download OCB Image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ocb_image
+          path: /tmp
+
+      - name: Load image
+        run: |
+          docker load --input /tmp/ocb_image.tar
+          docker image ls -a
+
       - name: Build and push image with latest tag
         uses: docker/build-push-action@v5
         with:
@@ -98,11 +116,12 @@ jobs:
           cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
           cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
-      - name: if test passed, create tags PR
-        run: |
-          echo "hi"
+      # - name: Tag OCB modules
+      #   run: |
+      #     git tag internal/aws/cwlogs/v${{ inputs.ocb-module-version }}
+      #     git tag internal/aws/awsutil/v${{ inputs.ocb-module-version }}
+      #     git tag exporter/awsemfexporter/v${{ inputs.ocb-module-version }}
+      #     git tag processor/awsapplicationsignalsprocessor/v${{ inputs.ocb-module-version }}
 
-      - name: Tag package
-        run: git tag test/v0.0.2
-      - name: Publish tags
-        run: git push --tags
+      # - name: Publish tags
+      #   run: git push --tags
