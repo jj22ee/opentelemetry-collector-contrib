@@ -102,9 +102,9 @@ jobs:
 
       - name: Build and push image with latest tag
         run: |
-          docker image pull ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }}
-          docker tag ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }} ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
-          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          docker image pull ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }}
+          docker tag ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }} ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          docker push ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
 
       # - name: Tag OCB modules
       #   run: |
