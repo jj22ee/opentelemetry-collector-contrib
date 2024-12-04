@@ -1,6 +1,7 @@
 name: Automation - Test and Create Release Tags for OCB components
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       ocb-module-version:
@@ -11,34 +12,18 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  E2E_TEST_ACCOUNT_ID: ${{ secrets.APPLICATION_SIGNALS_E2E_TEST_ACCOUNT_ID }}
-  E2E_TEST_ROLE_NAME: ${{ secrets.APPLICATION_SIGNALS_E2E_TEST_ROLE_NAME }}
-
 jobs:
   setup-ocb-test-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: aws-ocb-dev
+          ref: aws-ocb-dev-workflows
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.E2E_TEST_ACCOUNT_ID }}:role/${{ env.E2E_TEST_ROLE_NAME }}
-          aws-region: us-east-1
-
-      - name: Retrieve account
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            ACCOUNT_ID, otlp-region-account/gamma-us-east-1
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/${{ secrets.E2E_TEST_ROLE_NAME }}
+          role-to-assume: arn:aws:iam::${{ secrets.RELEASE_TEST_ACCOUNT_ID }}:role/${{ secrets.RELEASE_TEST_ACCOUNT_ROLE }}
           aws-region: us-east-1
 
       - name: Set up Docker Buildx
@@ -47,7 +32,7 @@ jobs:
       - name: Login to private AWS ECR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          registry: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
         env:
           AWS_REGION: us-east-1
 
@@ -58,25 +43,25 @@ jobs:
           context: ./ocb-utils/
           file: ./ocb-utils/Dockerfile
           platforms: linux/amd64
-          tags: ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }}
+          tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }}
           load: false
           cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
           cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
 
-  ocb-e2e-test:
-    secrets: inherit
-    needs: [ setup-ocb-test-image ]
-    uses: aws-observability/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
-    with:
-      aws-region: us-east-1
-      test-cluster-name: 'e2e-otel-collector-contrib-release-test'
-      caller-workflow-name: 'appsignals-java-e2e-eks-otlp-ocb-release-test'
-      java-version: '11'
-      e2e-otel-collector-image-tag: ${{ github.sha }}
+  # ocb-e2e-test:
+  #   secrets: inherit
+  #   needs: [ setup-test-for-prepare-release ]
+  #   uses: jj22ee/aws-application-signals-test-framework/.github/workflows/java-eks-otlp-ocb-test.yml@otlp-ocb-main-build
+  #   with:
+  #     aws-region: us-east-1
+  #     test-cluster-name: 'e2e-otel-collector-contrib-release-test'
+  #     caller-workflow-name: 'main-build-java-e2e-eks-otlp-ocb-canary-test'
+  #     java-version: '11'
+  #     e2e-otel-collector-image-tag: ${{ github.sha }}
 
   update-canary-image-and-tag-release:
     runs-on: ubuntu-latest
-    needs: [ ocb-e2e-test ]
+    needs: [ setup-ocb-test-image ]
     permissions:
       id-token: write
       contents: write
@@ -88,19 +73,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ env.E2E_TEST_ACCOUNT_ID }}:role/${{ env.E2E_TEST_ROLE_NAME }}
-          aws-region: us-east-1
-
-      - name: Retrieve account
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            ACCOUNT_ID, otlp-region-account/gamma-us-east-1
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/${{ secrets.E2E_TEST_ROLE_NAME }}
+          role-to-assume: arn:aws:iam::${{ secrets.RELEASE_TEST_ACCOUNT_ID }}:role/${{ secrets.RELEASE_TEST_ACCOUNT_ROLE }}
           aws-region: us-east-1
 
       - name: Set up Docker Buildx
@@ -109,7 +82,7 @@ jobs:
       - name: Login to private AWS ECR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+          registry: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
         env:
           AWS_REGION: us-east-1
 
@@ -120,7 +93,7 @@ jobs:
           context: ./ocb-utils/
           file: ./ocb-utils/Dockerfile
           platforms: linux/amd64
-          tags: ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
           load: false
           cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
           cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
