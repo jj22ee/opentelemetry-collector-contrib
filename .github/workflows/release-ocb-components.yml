@@ -12,13 +12,16 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  OCB_MODULE_VERSION: 0.113.0 #${{ inputs.ocb-module-version }}
+
 jobs:
   setup-ocb-test-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: aws-ocb-dev-workflows
+          ref: aws-ocb-dev-workflows-checkpoint
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -35,6 +38,17 @@ jobs:
           registry: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
         env:
           AWS_REGION: us-east-1
+
+      - name: Update versions used in OCB testing
+        run: |
+          sed -i -e 's#${TEST_COMPONENT_GITHASH}#${{ github.sha }}#g' ./ocb-utils/builder-config-appsignals.yaml
+          sed -i -e 's#${OCB_VERSION}#${{ env.OCB_MODULE_VERSION }}#g' ./ocb-utils/builder-config-appsignals.yaml
+          sed -i -e 's#${OCB_VERSION}#${{ env.OCB_MODULE_VERSION }}#g' ./ocb-utils/Dockerfile
+
+      - name: test CAT
+        run: |
+          cat ./ocb-utils/builder-config-appsignals.yaml
+          cat ./ocb-utils/Dockerfile
 
       - name: Build and push image with latest git hash as tag
         uses: docker/build-push-action@v5
@@ -87,23 +101,17 @@ jobs:
           AWS_REGION: us-east-1
 
       - name: Build and push image with latest tag
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          context: ./ocb-utils/
-          file: ./ocb-utils/Dockerfile
-          platforms: linux/amd64
-          tags: ${{ secrets.RELEASE_TEST_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
-          load: false
-          cache-from: type=gha,scope=build-${{ github.ref_name }}-ocb
-          cache-to: type=gha,scope=build-${{ github.ref_name }}-ocb
-
-      - name: Tag OCB modules
         run: |
-          git tag internal/aws/cwlogs/v${{ inputs.ocb-module-version }}
-          git tag internal/aws/awsutil/v${{ inputs.ocb-module-version }}
-          git tag exporter/awsemfexporter/v${{ inputs.ocb-module-version }}
-          git tag processor/awsapplicationsignalsprocessor/v${{ inputs.ocb-module-version }}
+          docker image pull ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }}
+          docker tag ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:${{ github.sha }} ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
+          docker push ${{ env.ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/ocb-release-test-collector:latest
 
-      - name: Publish tags for OCB modules
-        run: git push --tags
+      # - name: Tag OCB modules
+      #   run: |
+      #     git tag internal/aws/cwlogs/v${{ env.OCB_MODULE_VERSION }}
+      #     git tag internal/aws/awsutil/v${{ env.OCB_MODULE_VERSION }}
+      #     git tag exporter/awsemfexporter/v${{ env.OCB_MODULE_VERSION }}
+      #     git tag processor/awsapplicationsignalsprocessor/v${{ env.OCB_MODULE_VERSION }}
+
+      # - name: Publish tags for OCB modules
+      #   run: git push --tags

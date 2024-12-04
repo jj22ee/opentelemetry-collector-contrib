@@ -5,7 +5,7 @@ FROM public.ecr.aws/docker/library/golang:1.23.2 AS build
 
 WORKDIR /tmp/build/
 RUN go env -w GOPROXY=direct
-RUN curl --proto '=https' --tlsv1.2 -fL -o ocb https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv0.111.0/ocb_0.111.0_linux_amd64
+RUN curl --proto '=https' --tlsv1.2 -fL -o ocb https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/cmd%2Fbuilder%2Fv${OCB_VERSION}/ocb_${OCB_VERSION}_linux_amd64
 
 RUN chmod +x ocb
 
