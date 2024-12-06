@@ -55,7 +55,7 @@ func NewAttributesResolver(resolvers []appsignalsconfig.Resolver, logger *zap.Lo
 		switch resolver.Platform {
 		case appsignalsconfig.PlatformEKS, appsignalsconfig.PlatformK8s:
 			if resolver.Name == "" {
-				resolver.Name = "UNKNOWN"
+				resolver.Name = "UNKNOWN_01"
 			}
 			subResolvers = append(subResolvers, getKubernetesResolver(resolver.Platform, resolver.Name, logger), newKubernetesResourceAttributesResolver(resolver.Platform, resolver.Name))
 		case appsignalsconfig.PlatformEC2:
