@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
+	"go.opentelemetry.io/collector/confmap/xconfmap"
 	"go.opentelemetry.io/collector/featuregate"
 	"go.uber.org/zap"
 
@@ -104,50 +105,6 @@ func TestLoadConfig(t *testing.T) {
 				logger: zap.NewNop(),
 			},
 		},
-		{
-			id: component.NewIDWithName(metadata.Type, "disable_metric_extraction"),
-			expected: &Config{
-				AWSSessionSettings: awsutil.AWSSessionSettings{
-					NumberOfWorkers:       8,
-					Endpoint:              "",
-					RequestTimeoutSeconds: 30,
-					MaxRetries:            2,
-					NoVerifySSL:           false,
-					ProxyAddress:          "",
-					Region:                "",
-					RoleARN:               "",
-				},
-				LogGroupName:            "",
-				LogStreamName:           "",
-				DimensionRollupOption:   "ZeroAndSingleDimensionRollup",
-				OutputDestination:       "cloudwatch",
-				Version:                 "1",
-				DisableMetricExtraction: true,
-				logger:                  zap.NewNop(),
-			},
-		},
-		{
-			id: component.NewIDWithName(metadata.Type, "enhanced_container_insights"),
-			expected: &Config{
-				AWSSessionSettings: awsutil.AWSSessionSettings{
-					NumberOfWorkers:       8,
-					Endpoint:              "",
-					RequestTimeoutSeconds: 30,
-					MaxRetries:            2,
-					NoVerifySSL:           false,
-					ProxyAddress:          "",
-					Region:                "",
-					RoleARN:               "",
-				},
-				LogGroupName:              "",
-				LogStreamName:             "",
-				DimensionRollupOption:     "ZeroAndSingleDimensionRollup",
-				OutputDestination:         "cloudwatch",
-				Version:                   "1",
-				EnhancedContainerInsights: true,
-				logger:                    zap.NewNop(),
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -159,7 +116,7 @@ func TestLoadConfig(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, sub.Unmarshal(cfg))
 
-			assert.NoError(t, component.ValidateConfig(cfg))
+			assert.NoError(t, xconfmap.Validate(cfg))
 			assert.Equal(t, tt.expected, cfg)
 		})
 	}
@@ -182,9 +139,9 @@ func TestConfigValidate(t *testing.T) {
 		MetricDescriptors:           incorrectDescriptor,
 		logger:                      zap.NewNop(),
 	}
-	assert.NoError(t, component.ValidateConfig(cfg))
+	assert.NoError(t, xconfmap.Validate(cfg))
 
-	assert.Equal(t, 2, len(cfg.MetricDescriptors))
+	assert.Len(t, cfg.MetricDescriptors, 2)
 	assert.Equal(t, []MetricDescriptor{
 		{Unit: "Count", MetricName: "apiserver_total", Overwrite: true},
 		{Unit: "Megabytes", MetricName: "memory_usage"},
@@ -202,8 +159,7 @@ func TestRetentionValidateCorrect(t *testing.T) {
 		ResourceToTelemetrySettings: resourcetotelemetry.Settings{Enabled: true},
 		logger:                      zap.NewNop(),
 	}
-	assert.NoError(t, component.ValidateConfig(cfg))
-
+	assert.NoError(t, xconfmap.Validate(cfg))
 }
 
 func TestRetentionValidateWrong(t *testing.T) {
@@ -217,8 +173,7 @@ func TestRetentionValidateWrong(t *testing.T) {
 		ResourceToTelemetrySettings: resourcetotelemetry.Settings{Enabled: true},
 		logger:                      zap.NewNop(),
 	}
-	assert.Error(t, component.ValidateConfig(wrongcfg))
-
+	assert.Error(t, xconfmap.Validate(wrongcfg))
 }
 
 func TestValidateTags(t *testing.T) {
@@ -298,10 +253,10 @@ func TestValidateTags(t *testing.T) {
 				logger:                      zap.NewNop(),
 			}
 			if tt.errorMessage != "" {
-				assert.EqualError(t, component.ValidateConfig(cfg), tt.errorMessage)
+				assert.ErrorContains(t, xconfmap.Validate(cfg), tt.errorMessage)
 				return
 			}
-			assert.NoError(t, component.ValidateConfig(cfg))
+			assert.NoError(t, xconfmap.Validate(cfg))
 		})
 	}
 }
@@ -311,21 +266,8 @@ func TestNoDimensionRollupFeatureGate(t *testing.T) {
 	require.NoError(t, err)
 	cfg := createDefaultConfig()
 
-	assert.Equal(t, cfg.(*Config).DimensionRollupOption, "NoDimensionRollup")
+	assert.Equal(t, "NoDimensionRollup", cfg.(*Config).DimensionRollupOption)
 	_ = featuregate.GlobalRegistry().Set("awsemf.nodimrollupdefault", false)
-}
-
-func TestIsEnhancedContainerInsights(t *testing.T) {
-	factory := NewFactory()
-	cfg := factory.CreateDefaultConfig().(*Config)
-	cfg.EnhancedContainerInsights = true
-	cfg.DisableMetricExtraction = false
-	assert.True(t, cfg.IsEnhancedContainerInsights())
-	cfg.EnhancedContainerInsights = false
-	assert.False(t, cfg.IsEnhancedContainerInsights())
-	cfg.EnhancedContainerInsights = true
-	cfg.DisableMetricExtraction = true
-	assert.False(t, cfg.IsEnhancedContainerInsights())
 }
 
 func TestIsApplicationSignalsEnabled(t *testing.T) {
@@ -377,7 +319,7 @@ func TestIsApplicationSignalsEnabled(t *testing.T) {
 				cfg.LogGroupName = tc.logGroupName
 			}
 
-			assert.Equal(t, cfg.IsAppSignalsEnabled(), tc.expectedResult)
+			assert.Equal(t, tc.expectedResult, cfg.IsAppSignalsEnabled())
 		})
 	}
 }

@@ -20,6 +20,8 @@ import (
 	"go.opentelemetry.io/collector/processor/processortest"
 )
 
+var typ = component.MustNewType("awsapplicationsignals")
+
 func TestComponentFactoryType(t *testing.T) {
 	require.Equal(t, "awsapplicationsignals", NewFactory().Type().String())
 }
@@ -60,13 +62,13 @@ func TestComponentLifecycle(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name+"-shutdown", func(t *testing.T) {
-			c, err := test.createFn(context.Background(), processortest.NewNopSettings(), cfg)
+			c, err := test.createFn(context.Background(), processortest.NewNopSettings(typ), cfg)
 			require.NoError(t, err)
 			err = c.Shutdown(context.Background())
 			require.NoError(t, err)
 		})
 		t.Run(test.name+"-lifecycle", func(t *testing.T) {
-			c, err := test.createFn(context.Background(), processortest.NewNopSettings(), cfg)
+			c, err := test.createFn(context.Background(), processortest.NewNopSettings(typ), cfg)
 			require.NoError(t, err)
 			host := componenttest.NewNopHost()
 			err = c.Start(context.Background(), host)

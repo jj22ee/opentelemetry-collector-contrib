@@ -22,7 +22,7 @@ func NewReplacer(rules []Rule, markDataPointAsReserved bool) *ReplaceActions {
 
 func (r *ReplaceActions) Process(attributes, _ pcommon.Map, isTrace bool) error {
 	// do nothing when there is no replace rule defined
-	if r.Actions == nil || len(r.Actions) == 0 {
+	if len(r.Actions) == 0 {
 		return nil
 	}
 	// If there are more than one rule are matched, the last one will be executed(Later one has higher priority)

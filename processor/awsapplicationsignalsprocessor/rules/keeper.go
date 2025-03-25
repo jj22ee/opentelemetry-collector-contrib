@@ -22,7 +22,7 @@ func NewKeeper(rules []Rule, markDataPointAsReserved bool) *KeepActions {
 
 func (k *KeepActions) ShouldBeDropped(attributes pcommon.Map) (bool, error) {
 	// nothing will be dropped if no keep rule is defined
-	if k.Actions == nil || len(k.Actions) == 0 {
+	if len(k.Actions) == 0 {
 		return false, nil
 	}
 	for _, element := range k.Actions {

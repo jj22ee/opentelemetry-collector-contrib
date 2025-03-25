@@ -17,7 +17,7 @@ func NewDropper(rules []Rule) *DropActions {
 
 func (d *DropActions) ShouldBeDropped(attributes pcommon.Map) (bool, error) {
 	// nothing will be dropped if no rule is defined
-	if d.Actions == nil || len(d.Actions) == 0 {
+	if len(d.Actions) == 0 {
 		return false, nil
 	}
 	for _, element := range d.Actions {
