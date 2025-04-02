@@ -77,7 +77,7 @@ jobs:
     with:
       aws-region: us-east-1
       test-cluster-name: 'e2e-otel-collector-contrib-release-test'
-      caller-workflow-name: 'appsignals-java-e2e-eks-otlp-ocb-release-test'
+      caller-workflow-name: 'main-build'
       java-version: '11'
       e2e-otel-collector-image-tag: ${{ github.sha }}
 
