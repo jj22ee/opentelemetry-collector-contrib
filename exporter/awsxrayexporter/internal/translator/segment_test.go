@@ -1966,6 +1966,8 @@ func constructSpanAttributes(attributes map[string]any) pcommon.Map {
 			attrs.PutInt(key, int64(cast))
 		} else if cast, ok := value.(int64); ok {
 			attrs.PutInt(key, cast)
+		} else if cast, ok := value.(bool); ok {
+			attrs.PutBool(key, cast)
 		} else if cast, ok := value.([]string); ok {
 			slice := attrs.PutEmptySlice(key)
 			for _, v := range cast {
@@ -2041,6 +2043,40 @@ func constructTimedEventsWithSentMessageEvent(tm pcommon.Timestamp) ptrace.SpanE
 }
 
 // newTraceID generates a new valid X-Ray TraceID
+func TestSpanWithInProgressTrue(t *testing.T) {
+	spanName := "/api/test"
+	parentSpanID := newSegmentID()
+	attributes := make(map[string]any)
+	attributes[awsxray.AWSXRayInProgressAttribute] = true
+	resource := constructDefaultResource()
+	span := constructServerSpan(parentSpanID, spanName, ptrace.StatusCodeOk, "OK", attributes)
+
+	segment, _ := MakeSegment(span, resource, nil, false, nil, false)
+
+	assert.NotNil(t, segment)
+	assert.NotNil(t, segment.InProgress)
+	assert.True(t, *segment.InProgress)
+	assert.Nil(t, segment.EndTime)
+	assert.Nil(t, segment.Metadata["default"][awsxray.AWSXRayInProgressAttribute])
+}
+
+func TestSpanWithInProgressFalse(t *testing.T) {
+	spanName := "/api/test"
+	parentSpanID := newSegmentID()
+	attributes := make(map[string]any)
+	attributes[awsxray.AWSXRayInProgressAttribute] = false
+	resource := constructDefaultResource()
+	span := constructServerSpan(parentSpanID, spanName, ptrace.StatusCodeOk, "OK", attributes)
+
+	segment, _ := MakeSegment(span, resource, nil, false, nil, false)
+
+	assert.NotNil(t, segment)
+	assert.Nil(t, segment.InProgress)
+	assert.NotNil(t, segment.EndTime)
+	assert.Empty(t, segment.Annotations)
+	assert.Nil(t, segment.Metadata["default"][awsxray.AWSXRayInProgressAttribute])
+}
+
 func newTraceID() pcommon.TraceID {
 	var r [16]byte
 	epoch := time.Now().Unix()
