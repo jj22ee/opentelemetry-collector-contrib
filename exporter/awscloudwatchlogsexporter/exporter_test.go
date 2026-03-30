@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/collector/exporter/exportertest"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
+	"go.uber.org/zap"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter/internal/metadata"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/aws/cwlogs"
@@ -305,7 +306,7 @@ func TestLogToCWLog(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resourceAttrs := attrsValue(tt.resource.Attributes())
-			got, err := logToCWLog(resourceAttrs, tt.scope, tt.log, tt.config)
+			got, err := logToCWLog(zap.NewNop(), resourceAttrs, tt.scope, tt.log, tt.config)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("logToCWLog() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -325,7 +326,7 @@ func BenchmarkLogToCWLog(b *testing.B) {
 	log := testLogRecord()
 	scope := testScope()
 	for i := 0; i < b.N; i++ {
-		_, err := logToCWLog(attrsValue(resource.Attributes()), scope, log, &Config{})
+		_, err := logToCWLog(zap.NewNop(), attrsValue(resource.Attributes()), scope, log, &Config{})
 		if err != nil {
 			b.Errorf("logToCWLog() failed %v", err)
 			return
