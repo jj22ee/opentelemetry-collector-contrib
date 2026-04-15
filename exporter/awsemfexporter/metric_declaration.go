@@ -26,6 +26,12 @@ type MetricDeclaration struct {
 	// (Optional) List of label matchers that define matching rules to filter against
 	// the labels of incoming metrics.
 	LabelMatchers []*LabelMatcher `mapstructure:"label_matchers"`
+	// (Optional) Namespace override for metrics matching this declaration.
+	// If empty, the global Config.Namespace is used.
+	Namespace string `mapstructure:"namespace"`
+	// (Optional) Log group name override for metrics matching this declaration.
+	// If empty, the global Config.LogGroupName is used.
+	LogGroupName string `mapstructure:"log_group_name"`
 
 	// metricRegexList is a list of compiled regexes for metric name selectors.
 	metricRegexList []*regexp.Regexp
