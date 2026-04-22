@@ -24,7 +24,7 @@ extensions:
     # Inner auth extension for request signing (typically sigv4auth).
     additional_auth: sigv4auth/logs
 
-    # Log group name template. Placeholders are resolved from client.Metadata.
+    # Log group name template (required). Placeholders are resolved from client.Metadata.
     log_group_name: "/aws/telemetry/{service.name}"
 
     # Log stream name (static or with placeholders).

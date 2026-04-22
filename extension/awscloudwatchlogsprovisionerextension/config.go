@@ -4,6 +4,8 @@
 package awscloudwatchlogsprovisionerextension // import "github.com/open-telemetry/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension"
 
 import (
+	"errors"
+
 	"go.opentelemetry.io/collector/component"
 )
 
@@ -18,15 +20,18 @@ type Config struct {
 	// If empty, the region is extracted from the request URL.
 	Region string `mapstructure:"region,omitempty"`
 
-	// LogGroupName is the log group name template. Placeholders like {ServiceName},
-	// {PodName}, {InstanceId} are resolved from client.Metadata.
+	// LogGroupName is the log group name template (required). Placeholders like
+	// {service.name}, {k8s.pod.name}, etc. are resolved from client.Metadata.
+	// Example: "/aws/telemetry/{service.name}"
 	LogGroupName string `mapstructure:"log_group_name"`
 
 	// LogStreamName is the log stream name template.
+	// Default: "default"
 	LogStreamName string `mapstructure:"log_stream_name"`
 
 	// DefaultPlaceholderValue is the fallback value when a placeholder cannot
 	// be resolved from client.Metadata.
+	// Default: "undefined"
 	DefaultPlaceholderValue string `mapstructure:"default_placeholder_value,omitempty"`
 
 	// LogsProvisionTimeoutSeconds is the HTTP timeout for each CreateLogGroup/CreateLogStream
@@ -38,4 +43,13 @@ type Config struct {
 	// During this period, the extension won't retry creation for the same (group, stream) pair.
 	// Default: 30 seconds.
 	LogsProvisionFailureBackoffSeconds int `mapstructure:"logs_provision_failure_backoff_seconds,omitempty"`
+}
+
+var _ component.Config = (*Config)(nil)
+
+func (cfg *Config) Validate() error {
+	if cfg.LogGroupName == "" {
+		return errors.New("log_group_name is required")
+	}
+	return nil
 }

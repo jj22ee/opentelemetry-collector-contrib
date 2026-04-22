@@ -20,7 +20,7 @@ func TestNewFactory(t *testing.T) {
 
 func TestCreateDefaultConfig(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
-	assert.Equal(t, "/aws/telemetry/{ServiceName}", cfg.LogGroupName)
+	assert.Equal(t, "", cfg.LogGroupName)
 	assert.Equal(t, "default", cfg.LogStreamName)
 	assert.Equal(t, "undefined", cfg.DefaultPlaceholderValue)
 	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
