@@ -50,6 +50,23 @@ func (m *mockHTTPClient) RoundTripper(base http.RoundTripper) (http.RoundTripper
 	return base, nil
 }
 
+// mockAuthWithHeader simulates an auth extension that adds a specific header
+// (e.g., sigv4auth adding Authorization). Used to verify auth chaining.
+type mockAuthWithHeader struct {
+	component.StartFunc
+	component.ShutdownFunc
+	headerKey   string
+	headerValue string
+}
+
+func (m *mockAuthWithHeader) RoundTripper(base http.RoundTripper) (http.RoundTripper, error) {
+	return roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		req2 := req.Clone(req.Context())
+		req2.Header.Set(m.headerKey, m.headerValue)
+		return base.RoundTrip(req2)
+	}), nil
+}
+
 // --- Mock host ---
 
 type mockHost struct {
@@ -121,16 +138,15 @@ func TestResolvePlaceholders(t *testing.T) {
 
 func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Second call should hit cache
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not create again after cache hit")
 }
 
@@ -139,32 +155,28 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 		createGroupErr: fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		Region:                "us-east-1",
 		LogsProvisionFailureBackoffSeconds: 60,
 	}, mockClient)
 
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	// Second call within backoff window should NOT retry
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not retry during backoff")
 }
 
 func TestEnsureProvisioned_Singleflight(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
-
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ext.ensureProvisioned(req, "/test/singleflight", "default")
+			ext.ensureProvisioned("us-east-1", "/test/singleflight", "default")
 		}()
 	}
 	wg.Wait()
@@ -176,7 +188,6 @@ func TestEnsureProvisioned_Singleflight(t *testing.T) {
 func TestRoundTripper_SetsHeaders(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{
-		Region:                  "us-east-1",
 		LogGroupName:            "/test/{service.name}",
 		LogStreamName:           "default",
 		DefaultPlaceholderValue: "unknown",
@@ -208,7 +219,6 @@ func TestRoundTripper_SetsHeaders(t *testing.T) {
 func TestRoundTripper_NoMetadata_UsesDefault(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{
-		Region:                  "us-east-1",
 		LogGroupName:            "/test/{service.name}",
 		LogStreamName:           "default",
 		DefaultPlaceholderValue: "undefined",
@@ -270,6 +280,58 @@ func TestRoundTripper_MissingAdditionalAuth(t *testing.T) {
 	assert.Contains(t, err.Error(), "not found")
 }
 
+// TestChainingWithAdditionalAuth verifies that the extension properly chains
+// with an additional auth extension, ensuring both the provisioner's headers
+// (x-aws-log-group) and the inner auth's modifications are present in the request.
+func TestChainingWithAdditionalAuth(t *testing.T) {
+	authID := component.MustNewID("sigv4auth")
+	mockClient := &mockCWLogsClient{}
+
+	ext := newTestExtension(t, &Config{
+		AdditionalAuth:          &authID,
+		LogGroupName:            "/test/{service.name}",
+		LogStreamName:           "default",
+		DefaultPlaceholderValue: "undefined",
+	}, mockClient)
+
+	// Mock auth that adds an Authorization header (simulating sigv4auth)
+	mockAuth := &mockAuthWithHeader{
+		headerKey:   "Authorization",
+		headerValue: "AWS4-HMAC-SHA256 Credential=...",
+	}
+	ext.host = &mockHost{
+		extensions: map[component.ID]component.Component{
+			authID: mockAuth,
+		},
+	}
+
+	var capturedReq *http.Request
+	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		capturedReq = req
+		return &http.Response{StatusCode: 200}, nil
+	})
+
+	rt, err := ext.RoundTripper(base)
+	require.NoError(t, err)
+
+	md := client.NewMetadata(map[string][]string{
+		"service.name": {"my-service"},
+	})
+	ctx := client.NewContext(context.Background(), client.Info{Metadata: md})
+	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
+	req = req.WithContext(ctx)
+
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
+
+	// Verify provisioner set x-aws-log-group
+	assert.Equal(t, "/test/my-service", capturedReq.Header.Get("x-aws-log-group"))
+	assert.Equal(t, "default", capturedReq.Header.Get("x-aws-log-stream"))
+
+	// Verify inner auth added its header
+	assert.Equal(t, "AWS4-HMAC-SHA256 Credential=...", capturedReq.Header.Get("Authorization"))
+}
+
 func TestDependencies(t *testing.T) {
 	authID := component.MustNewID("sigv4auth")
 
@@ -283,22 +345,38 @@ func TestDependencies(t *testing.T) {
 
 func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-
-	ext.ensureProvisioned(req, "/test/service-a", "default")
-	ext.ensureProvisioned(req, "/test/service-b", "default")
+	ext.ensureProvisioned("us-east-1", "/test/service-a", "default")
+	ext.ensureProvisioned("us-east-1", "/test/service-b", "default")
 
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "different keys should create independently")
 }
 
-func TestEnsureProvisioned_NoRegion(t *testing.T) {
+func TestRoundTrip_NoRegionInURL_SkipsCreation(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{}, mockClient)
+	ext := newTestExtension(t, &Config{
+		LogGroupName:            "/test/{service.name}",
+		LogStreamName:           "default",
+		DefaultPlaceholderValue: "undefined",
+	}, mockClient)
+	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
+	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: 200}, nil
+	})
+
+	rt, err := ext.RoundTripper(base)
+	require.NoError(t, err)
+
+	md := client.NewMetadata(map[string][]string{"service.name": {"svc"}})
+	ctx := client.NewContext(context.Background(), client.Info{Metadata: md})
+	// URL does not match CW OTLP endpoint pattern — region cannot be extracted
 	req := httptest.NewRequest(http.MethodPost, "https://example.com/v1/logs", nil)
-	ext.ensureProvisioned(req, "/test/group", "default")
+	req = req.WithContext(ctx)
+
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
 
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should skip creation when region unknown")
 }
@@ -308,18 +386,16 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 		createGroupErr: fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		Region:                "us-east-1",
 		LogsProvisionFailureBackoffSeconds: 1,
 	}, mockClient)
 
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	// Wait for backoff to expire
 	time.Sleep(1100 * time.Millisecond)
 
-	ext.ensureProvisioned(req, "/test/group", "default")
+	ext.ensureProvisioned("us-east-1", "/test/group", "default")
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "should retry after backoff expires")
 }
 

@@ -16,10 +16,6 @@ type Config struct {
 	// as headers_setter's additional_auth field.
 	AdditionalAuth *component.ID `mapstructure:"additional_auth"`
 
-	// Region overrides the AWS region for CreateLogGroup/CreateLogStream calls.
-	// If empty, the region is extracted from the request URL.
-	Region string `mapstructure:"region,omitempty"`
-
 	// LogGroupName is the log group name template (required). Placeholders like
 	// {service.name}, {k8s.pod.name}, etc. are resolved from client.Metadata.
 	// Example: "/aws/telemetry/{service.name}"
@@ -50,6 +46,9 @@ var _ component.Config = (*Config)(nil)
 func (cfg *Config) Validate() error {
 	if cfg.LogGroupName == "" {
 		return errors.New("log_group_name is required")
+	}
+	if cfg.LogStreamName == "" {
+		return errors.New("log_stream_name must not be empty")
 	}
 	return nil
 }

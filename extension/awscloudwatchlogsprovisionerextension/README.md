@@ -14,6 +14,21 @@ This extension is designed for use with the `otlphttp` exporter to send logs to 
 
 ## Configuration
 
+### Extension options
+
+| Field | Default | Description |
+|---|---|---|
+| `additional_auth` | (none) | Inner auth extension for request signing (typically `sigv4auth`) |
+| `log_group_name` | (required) | Log group name template. Placeholders like `{service.name}` are resolved from `client.Metadata` |
+| `log_stream_name` | `"default"` | Log stream name template. Placeholders like `{xyz}` are resolved from `client.Metadata` |
+| `default_placeholder_value` | `"undefined"` | Fallback value for unresolved placeholders |
+| `logs_provision_timeout_seconds` | `10` | HTTP timeout per CreateLogGroup/CreateLogStream API call (seconds) |
+| `logs_provision_failure_backoff_seconds` | `30` | TTL for negative cache entries after a creation failure (seconds) |
+
+### Full example
+
+This example routes OTLP logs to per-service CloudWatch log groups based on the `service.name` resource attribute. The [Attributes to Context processor](../../processor/attributestocontextprocessor) bridges the resource attribute into `client.Metadata`, and this extension resolves the `{service.name}` placeholder and creates the log group if needed.
+
 ```yaml
 extensions:
   sigv4auth/logs:
@@ -21,26 +36,28 @@ extensions:
     service: logs
 
   awscloudwatchlogsprovisioner:
-    # Inner auth extension for request signing (typically sigv4auth).
     additional_auth: sigv4auth/logs
-
-    # Log group name template (required). Placeholders are resolved from client.Metadata.
     log_group_name: "/aws/telemetry/{service.name}"
-
-    # Log stream name (static or with placeholders).
     log_stream_name: "default"
 
-    # Fallback value for unresolved placeholders. Default: "undefined"
-    default_placeholder_value: "undefined"
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
 
-    # AWS region override. If empty, extracted from the endpoint URL.
-    region: "us-east-1"
+processors:
+  attributestocontext:
+    actions:
+      - key: service.name
+        action: upsert
+        from_resource_attribute: service.name
 
-    # HTTP timeout per CreateLogGroup/CreateLogStream API call (seconds). Default: 10
-    logs_provision_timeout_seconds: 10
-
-    # TTL for negative cache entries after a creation failure (seconds). Default: 30
-    logs_provision_failure_backoff_seconds: 30
+  batch:
+    metadata_keys:
+      - service.name
 
 exporters:
   otlphttp/cw-logs:
@@ -48,6 +65,7 @@ exporters:
     logs_endpoint: https://logs.us-east-1.amazonaws.com/v1/logs
     auth:
       authenticator: awscloudwatchlogsprovisioner
+    compression: gzip
 
 service:
   extensions: [sigv4auth/logs, awscloudwatchlogsprovisioner]
@@ -60,9 +78,9 @@ service:
 
 ## Placeholder resolution
 
-Placeholders in `log_group_name` and `log_stream_name` are resolved from `client.Metadata` keys set by the [Attributes to Context processor](../../processor/attributestocontextprocessor)..
+Placeholders in `log_group_name` and `log_stream_name` are resolved from `client.Metadata` keys set by the [Attributes to Context processor](../../processor/attributestocontextprocessor).
 
-For example, with the processor configured as:
+The processor config controls which resource attributes are available as placeholders:
 
 ```yaml
 processors:
@@ -71,6 +89,9 @@ processors:
       - key: service.name
         action: upsert
         from_resource_attribute: service.name
+      - key: k8s.pod.name
+        action: upsert
+        from_resource_attribute: k8s.pod.name
 ```
 
-The template `{service.name}` resolves to the value of the `service.name` resource attribute.
+With this config, both `{service.name}` and `{k8s.pod.name}` can be used in templates.

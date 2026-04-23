@@ -25,7 +25,6 @@ func TestConfig_WithAuth(t *testing.T) {
 	authID := component.MustNewID("sigv4auth")
 	cfg := &Config{
 		AdditionalAuth:                     &authID,
-		Region:                             "us-west-2",
 		LogGroupName:                       "/custom/{service.name}",
 		LogStreamName:                      "{host.id}",
 		DefaultPlaceholderValue:            "fallback",
@@ -33,7 +32,6 @@ func TestConfig_WithAuth(t *testing.T) {
 	}
 
 	assert.Equal(t, "sigv4auth", cfg.AdditionalAuth.String())
-	assert.Equal(t, "us-west-2", cfg.Region)
 	assert.Equal(t, "/custom/{service.name}", cfg.LogGroupName)
 	assert.Equal(t, "{host.id}", cfg.LogStreamName)
 	assert.Equal(t, "fallback", cfg.DefaultPlaceholderValue)
@@ -45,8 +43,13 @@ func TestConfig_Validate_MissingLogGroupName(t *testing.T) {
 	assert.EqualError(t, cfg.Validate(), "log_group_name is required")
 }
 
-func TestConfig_Validate_WithLogGroupName(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}"}
+func TestConfig_Validate_EmptyLogStreamName(t *testing.T) {
+	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: ""}
+	assert.EqualError(t, cfg.Validate(), "log_stream_name must not be empty")
+}
+
+func TestConfig_Validate_Valid(t *testing.T) {
+	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default"}
 	assert.NoError(t, cfg.Validate())
 }
 

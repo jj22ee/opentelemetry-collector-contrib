@@ -143,11 +143,26 @@ func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundT
 }
 
 type provisionerRoundTripper struct {
-	base http.RoundTripper
-	ext  *provisionerExtension
+	base       http.RoundTripper
+	ext        *provisionerExtension
+	regionOnce sync.Once
+	region     string // extracted once from the first request URL
 }
 
 func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Extract region once from the first request URL. The endpoint is static
+	// (configured in the otlphttp exporter), so all requests share the same region.
+	// CW OTLP endpoint URL pattern: https://logs.<region>.amazonaws.com/v1/logs
+	// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html
+	rt.regionOnce.Do(func() {
+		rt.region = extractRegionFromURL(req.URL.String())
+		if rt.region == "" {
+			rt.ext.logger.Warn("Cannot determine region from endpoint URL — log group creation will be skipped",
+				zap.String("url", req.URL.String()),
+			)
+		}
+	})
+
 	logGroup, logStream := rt.ext.resolveHeaders(req)
 
 	if logGroup != "" {
@@ -155,7 +170,9 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		req2.Header.Set("x-aws-log-group", logGroup)
 		req2.Header.Set("x-aws-log-stream", logStream)
 
-		rt.ext.ensureProvisioned(req2, logGroup, logStream)
+		if rt.region != "" {
+			rt.ext.ensureProvisioned(rt.region, logGroup, logStream)
+		}
 
 		resp, err := rt.base.RoundTrip(req2)
 
@@ -180,9 +197,6 @@ func (e *provisionerExtension) resolveHeaders(req *http.Request) (logGroup, logS
 
 	logGroup = e.resolvePlaceholders(e.cfg.LogGroupName, cl.Metadata)
 	logStream = e.resolvePlaceholders(e.cfg.LogStreamName, cl.Metadata)
-	if logStream == "" {
-		logStream = "default"
-	}
 
 	return logGroup, logStream
 }
@@ -214,7 +228,7 @@ func (e *provisionerExtension) resolvePlaceholders(template string, md client.Me
 // expiry), concurrent requests for the same key will block until creation
 // completes. Each key is independent — creation of one log group does not
 // block requests for a different log group.
-func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, logStream string) {
+func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream string) {
 	key := logGroup + "\x00" + logStream
 
 	if val, ok := e.provisioned.Load(key); ok {
@@ -241,17 +255,6 @@ func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, lo
 		close(entry.done)
 		e.inflight.Delete(key)
 	}()
-
-	region := e.cfg.Region
-	if region == "" {
-		region = extractRegionFromURL(req.URL.String())
-	}
-	if region == "" {
-		e.logger.Warn("Cannot determine region for log group creation",
-			zap.String("logGroup", logGroup),
-		)
-		return
-	}
 
 	// Jitter for thundering-herd mitigation
 	jitter := time.Duration(rand.Int63n(int64(500 * time.Millisecond))) //nolint:gosec
