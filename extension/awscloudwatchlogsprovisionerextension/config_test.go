@@ -48,8 +48,13 @@ func TestConfig_Validate_EmptyLogStreamName(t *testing.T) {
 	assert.EqualError(t, cfg.Validate(), "log_stream_name must not be empty")
 }
 
+func TestConfig_Validate_EmptyDefaultPlaceholderValue(t *testing.T) {
+	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: ""}
+	assert.EqualError(t, cfg.Validate(), "default_placeholder_value must not be empty")
+}
+
 func TestConfig_Validate_Valid(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default"}
+	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: "undefined"}
 	assert.NoError(t, cfg.Validate())
 }
 

@@ -50,5 +50,8 @@ func (cfg *Config) Validate() error {
 	if cfg.LogStreamName == "" {
 		return errors.New("log_stream_name must not be empty")
 	}
+	if cfg.DefaultPlaceholderValue == "" {
+		return errors.New("default_placeholder_value must not be empty")
+	}
 	return nil
 }
