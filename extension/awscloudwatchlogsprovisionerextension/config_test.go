@@ -7,55 +7,79 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
 )
 
 func TestConfig_Defaults(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
 
-	assert.Equal(t, "", cfg.LogGroupName)
-	assert.Equal(t, "default", cfg.LogStreamName)
-	assert.Equal(t, "undefined", cfg.DefaultPlaceholderValue)
 	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
 	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
-	assert.Nil(t, cfg.AdditionalAuth)
+	assert.Empty(t, cfg.LogGroupName)
+	assert.Empty(t, cfg.LogGroupContextKey)
 }
 
-func TestConfig_WithAuth(t *testing.T) {
-	authID := component.MustNewID("sigv4auth")
+func TestConfig_ValidateStaticMode(t *testing.T) {
 	cfg := &Config{
-		AdditionalAuth:                     &authID,
-		LogGroupName:                       "/custom/{service.name}",
-		LogStreamName:                      "{host.id}",
-		DefaultPlaceholderValue:            "fallback",
-		LogsProvisionFailureBackoffSeconds: 60,
+		LogGroupName:  "/aws/telemetry/my-service",
+		LogStreamName: "default",
 	}
-
-	assert.Equal(t, "sigv4auth", cfg.AdditionalAuth.String())
-	assert.Equal(t, "/custom/{service.name}", cfg.LogGroupName)
-	assert.Equal(t, "{host.id}", cfg.LogStreamName)
-	assert.Equal(t, "fallback", cfg.DefaultPlaceholderValue)
-	assert.Equal(t, 60, cfg.LogsProvisionFailureBackoffSeconds)
-}
-
-func TestConfig_Validate_MissingLogGroupName(t *testing.T) {
-	cfg := &Config{}
-	assert.EqualError(t, cfg.Validate(), "log_group_name is required")
-}
-
-func TestConfig_Validate_EmptyLogStreamName(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: ""}
-	assert.EqualError(t, cfg.Validate(), "log_stream_name must not be empty")
-}
-
-func TestConfig_Validate_EmptyDefaultPlaceholderValue(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: ""}
-	assert.EqualError(t, cfg.Validate(), "default_placeholder_value must not be empty")
-}
-
-func TestConfig_Validate_Valid(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: "undefined"}
 	assert.NoError(t, cfg.Validate())
+}
+
+func TestConfig_ValidateDynamicMode(t *testing.T) {
+	cfg := &Config{
+		LogGroupContextKey:  "cwlogs.log_group",
+		LogStreamContextKey: "cwlogs.log_stream",
+	}
+	assert.NoError(t, cfg.Validate())
+}
+
+func TestConfig_ValidateRejectsEmpty(t *testing.T) {
+	cfg := &Config{}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "either log_group_name or log_group_context_key must be specified")
+}
+
+func TestConfig_ValidateRejectsBothModes(t *testing.T) {
+	cfg := &Config{
+		LogGroupName:       "/static/group",
+		LogGroupContextKey: "cwlogs.log_group",
+	}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "mutually exclusive")
+}
+
+func TestConfig_ValidateStaticRequiresStreamName(t *testing.T) {
+	cfg := &Config{
+		LogGroupName: "/static/group",
+	}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "log_stream_name is required")
+}
+
+func TestConfig_ValidateDynamicRequiresStreamContextKey(t *testing.T) {
+	cfg := &Config{
+		LogGroupContextKey: "cwlogs.log_group",
+	}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "log_stream_context_key is required")
+}
+
+func TestConfig_ValidateRejectsMixedStaticAndContext(t *testing.T) {
+	cfg := &Config{
+		LogGroupName:        "/static/group",
+		LogStreamName:       "default",
+		LogStreamContextKey: "cwlogs.log_stream",
+	}
+	err := cfg.Validate()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "log_stream_context_key cannot be used with log_group_name")
 }
 
 func TestFactory_Type(t *testing.T) {

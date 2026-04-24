@@ -26,9 +26,6 @@ const (
 
 var cwLogsEndpointPattern = regexp.MustCompile(`^https://logs\.([a-z0-9-]+)\.amazonaws\.com`)
 
-// placeholderPattern matches {PlaceholderName} in templates.
-var placeholderPattern = regexp.MustCompile(`\{([^}]+)\}`)
-
 var (
 	_ component.Component             = (*provisionerExtension)(nil)
 	_ extensionauth.HTTPClient        = (*provisionerExtension)(nil)
@@ -55,7 +52,6 @@ type provisionerExtension struct {
 	cfg    *Config
 
 	// host is stored during Start() for lazy resolution of additional_auth.
-	// Follows the same pattern as headers_setter extension.
 	host           component.Host
 	cwLogsClientFn func(region string, timeout time.Duration) (cwLogsClient, error)
 
@@ -124,7 +120,6 @@ func (e *provisionerExtension) getAdditionalAuthExtension() (extensionauth.HTTPC
 func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundTripper, error) {
 	transport := base
 
-	// Chain with additional_auth (e.g., sigv4auth) if configured.
 	additionalAuth, err := e.getAdditionalAuthExtension()
 	if err != nil {
 		return nil, err
@@ -143,36 +138,19 @@ func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundT
 }
 
 type provisionerRoundTripper struct {
-	base       http.RoundTripper
-	ext        *provisionerExtension
-	regionOnce sync.Once
-	region     string // extracted once from the first request URL
+	base http.RoundTripper
+	ext  *provisionerExtension
 }
 
 func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Extract region once from the first request URL. The endpoint is static
-	// (configured in the otlphttp exporter), so all requests share the same region.
-	// CW OTLP endpoint URL pattern: https://logs.<region>.amazonaws.com/v1/logs
-	// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html
-	rt.regionOnce.Do(func() {
-		rt.region = extractRegionFromURL(req.URL.String())
-		if rt.region == "" {
-			rt.ext.logger.Warn("Cannot determine region from endpoint URL — log group creation will be skipped",
-				zap.String("url", req.URL.String()),
-			)
-		}
-	})
-
-	logGroup, logStream := rt.ext.resolveHeaders(req)
+	logGroup, logStream := rt.ext.resolveLogGroupAndStream(req)
 
 	if logGroup != "" {
 		req2 := req.Clone(req.Context())
 		req2.Header.Set("x-aws-log-group", logGroup)
 		req2.Header.Set("x-aws-log-stream", logStream)
 
-		if rt.region != "" {
-			rt.ext.ensureProvisioned(rt.region, logGroup, logStream)
-		}
+		rt.ext.ensureProvisioned(req2, logGroup, logStream)
 
 		resp, err := rt.base.RoundTrip(req2)
 
@@ -192,31 +170,31 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 	return rt.base.RoundTrip(req)
 }
 
-func (e *provisionerExtension) resolveHeaders(req *http.Request) (logGroup, logStream string) {
+// resolveLogGroupAndStream returns the log group and stream names, either from
+// static config values or by reading from client.Metadata context keys.
+func (e *provisionerExtension) resolveLogGroupAndStream(req *http.Request) (logGroup, logStream string) {
+	// Static mode: values are in the config
+	if e.cfg.LogGroupName != "" {
+		return e.cfg.LogGroupName, e.cfg.LogStreamName
+	}
+
+	// Dynamic mode: read from client.Metadata
 	cl := client.FromContext(req.Context())
 
-	logGroup = e.resolvePlaceholders(e.cfg.LogGroupName, cl.Metadata)
-	logStream = e.resolvePlaceholders(e.cfg.LogStreamName, cl.Metadata)
+	groups := cl.Metadata.Get(e.cfg.LogGroupContextKey)
+	if len(groups) > 0 && groups[0] != "" {
+		logGroup = groups[0]
+	}
+
+	streams := cl.Metadata.Get(e.cfg.LogStreamContextKey)
+	if len(streams) > 0 && streams[0] != "" {
+		logStream = streams[0]
+	}
+	if logStream == "" {
+		logStream = "default"
+	}
 
 	return logGroup, logStream
-}
-
-// resolvePlaceholders replaces {key} placeholders with values from client.Metadata.
-// placeholderPattern is a simple pre-compiled regex (`\{([^}]+)\}`).
-func (e *provisionerExtension) resolvePlaceholders(template string, md client.Metadata) string {
-	return placeholderPattern.ReplaceAllStringFunc(template, func(match string) string {
-		key := match[1 : len(match)-1]
-
-		values := md.Get(key)
-		if len(values) > 0 && values[0] != "" {
-			return values[0]
-		}
-
-		// awscloudwatchlogsexporter uses "undefined" as the default for unresolved
-		// placeholders. We use a configurable default (DefaultPlaceholderValue) for
-		// flexibility, defaulting to "undefined".
-		return e.cfg.DefaultPlaceholderValue
-	})
 }
 
 // ensureProvisioned creates the log group and stream if not already cached.
@@ -228,7 +206,7 @@ func (e *provisionerExtension) resolvePlaceholders(template string, md client.Me
 // expiry), concurrent requests for the same key will block until creation
 // completes. Each key is independent — creation of one log group does not
 // block requests for a different log group.
-func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream string) {
+func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, logStream string) {
 	key := logGroup + "\x00" + logStream
 
 	if val, ok := e.provisioned.Load(key); ok {
@@ -255,6 +233,17 @@ func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream str
 		close(entry.done)
 		e.inflight.Delete(key)
 	}()
+
+	region := e.cfg.Region
+	if region == "" {
+		region = extractRegionFromURL(req.URL.String())
+	}
+	if region == "" {
+		e.logger.Warn("Cannot determine region for log group creation",
+			zap.String("logGroup", logGroup),
+		)
+		return
+	}
 
 	// Jitter for thundering-herd mitigation
 	jitter := time.Duration(rand.Int63n(int64(500 * time.Millisecond))) //nolint:gosec

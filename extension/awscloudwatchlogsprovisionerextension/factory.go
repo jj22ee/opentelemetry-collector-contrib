@@ -22,8 +22,6 @@ func NewFactory() extension.Factory {
 
 func createDefaultConfig() component.Config {
 	return &Config{
-		LogStreamName:                      "default",
-		DefaultPlaceholderValue:            "undefined",
 		LogsProvisionTimeoutSeconds:        10,
 		LogsProvisionFailureBackoffSeconds: 30,
 	}
