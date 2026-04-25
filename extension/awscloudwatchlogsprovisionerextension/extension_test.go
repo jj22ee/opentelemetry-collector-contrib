@@ -100,7 +100,7 @@ func TestExtractRegionFromURL(t *testing.T) {
 // Test: static headers from exporter, no context keys — extension just provisions
 func TestRoundTripper_StaticHeaders_NoContextKeys(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
 	var capturedReq *http.Request
@@ -131,7 +131,6 @@ func TestRoundTripper_StaticHeaders_NoContextKeys(t *testing.T) {
 func TestRoundTripper_ContextKeysOverrideHeaders(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{
-		Region:              "us-east-1",
 		LogGroupContextKey:  "cwlogs.log_group",
 		LogStreamContextKey: "cwlogs.log_stream",
 	}, mockClient)
@@ -169,7 +168,6 @@ func TestRoundTripper_ContextKeysOverrideHeaders(t *testing.T) {
 func TestRoundTripper_ContextKeyEmpty_FallsBackToHeader(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{
-		Region:             "us-east-1",
 		LogGroupContextKey: "cwlogs.log_group",
 	}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
@@ -201,7 +199,7 @@ func TestRoundTripper_ContextKeyEmpty_FallsBackToHeader(t *testing.T) {
 // Test: no log group at all — request passes through without provisioning
 func TestRoundTripper_NoLogGroup_PassesThrough(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
 	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
@@ -223,7 +221,7 @@ func TestRoundTripper_NoLogGroup_PassesThrough(t *testing.T) {
 // Test: missing log stream defaults to "default"
 func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
 	var capturedReq *http.Request
@@ -247,7 +245,7 @@ func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 
 func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 	ext.ensureProvisioned(req, "/test/group", "default")
@@ -265,7 +263,6 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 		createGroupErr: fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		Region:                             "us-east-1",
 		LogsProvisionFailureBackoffSeconds: 60,
 	}, mockClient)
 
@@ -279,7 +276,7 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 
 func TestEnsureProvisioned_Singleflight(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 
@@ -342,7 +339,7 @@ func TestDependencies(t *testing.T) {
 
 func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{Region: "us-east-1"}, mockClient)
+	ext := newTestExtension(t, &Config{}, mockClient)
 
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 
@@ -367,7 +364,6 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 		createGroupErr: fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		Region:                             "us-east-1",
 		LogsProvisionFailureBackoffSeconds: 1,
 	}, mockClient)
 

@@ -32,10 +32,6 @@ type Config struct {
 	// as headers_setter's additional_auth field.
 	AdditionalAuth *component.ID `mapstructure:"additional_auth"`
 
-	// Region overrides the AWS region for CreateLogGroup/CreateLogStream calls.
-	// If empty, the region is extracted from the request URL.
-	Region string `mapstructure:"region,omitempty"`
-
 	// LogGroupContextKey is an optional client.Metadata key to read the log group
 	// name from. If set, overrides whatever x-aws-log-group header is on the request.
 	LogGroupContextKey string `mapstructure:"log_group_context_key,omitempty"`

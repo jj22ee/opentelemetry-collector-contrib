@@ -23,7 +23,6 @@ func TestConfig_WithContextKeys(t *testing.T) {
 	authID := component.MustNewID("sigv4auth")
 	cfg := &Config{
 		AdditionalAuth:      &authID,
-		Region:              "us-west-2",
 		LogGroupContextKey:  "cwlogs.log_group",
 		LogStreamContextKey: "cwlogs.log_stream",
 	}

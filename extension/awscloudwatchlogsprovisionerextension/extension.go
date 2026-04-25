@@ -236,10 +236,7 @@ func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, lo
 		e.inflight.Delete(key)
 	}()
 
-	region := e.cfg.Region
-	if region == "" {
-		region = extractRegionFromURL(req.URL.String())
-	}
+	region := extractRegionFromURL(req.URL.String())
 	if region == "" {
 		e.logger.Warn("Cannot determine region for log group creation",
 			zap.String("logGroup", logGroup),
