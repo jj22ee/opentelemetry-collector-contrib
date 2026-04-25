@@ -4,23 +4,28 @@
 package awscloudwatchlogsprovisionerextension // import "github.com/open-telemetry/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension"
 
 import (
-	"errors"
-
 	"go.opentelemetry.io/collector/component"
 )
 
 // Config for the awscloudwatchlogsprovisioner extension.
 //
-// Supports two modes (mutually exclusive):
+// The extension reads x-aws-log-group and x-aws-log-stream headers from outgoing
+// requests and lazily creates the corresponding CloudWatch log groups and streams.
 //
-// Static mode: log_group_name and log_stream_name are set directly in the config.
-// All requests use the same log group/stream.
+// Header resolution priority:
+//  1. Start with whatever x-aws-log-group/x-aws-log-stream headers are already
+//     on the request (e.g., set by otlphttp exporter static headers or headers_setter).
+//  2. If log_group_context_key is set, override x-aws-log-group with the value
+//     from client.Metadata at that key.
+//  3. If log_stream_context_key is set, override x-aws-log-stream with the value
+//     from client.Metadata at that key.
 //
-// Dynamic mode: log_group_context_key and log_stream_context_key specify
-// client.Metadata keys to read the full log group/stream names from at request
-// time. The values should be set by an upstream processor (e.g., transform
-// processor + attributestocontext processor). No placeholder resolution is done
-// by the extension — the metadata value IS the log group/stream name.
+// This means:
+//   - Static case: No context keys needed. Configure x-aws-log-group in the
+//     otlphttp exporter headers. The extension just provisions whatever it sees.
+//   - Dynamic case: Set context keys. An upstream processor (e.g., transform +
+//     attributestocontext) populates client.Metadata with full log group/stream
+//     names, and the extension overrides the headers and provisions.
 type Config struct {
 	// AdditionalAuth is a reference to the inner auth extension (typically sigv4auth)
 	// that this extension chains with for request signing. Follows the same pattern
@@ -31,22 +36,12 @@ type Config struct {
 	// If empty, the region is extracted from the request URL.
 	Region string `mapstructure:"region,omitempty"`
 
-	// --- Static mode (mutually exclusive with context key mode) ---
-
-	// LogGroupName is the static log group name. All requests use this value.
-	LogGroupName string `mapstructure:"log_group_name,omitempty"`
-
-	// LogStreamName is the static log stream name.
-	LogStreamName string `mapstructure:"log_stream_name,omitempty"`
-
-	// --- Dynamic mode (mutually exclusive with static mode) ---
-
-	// LogGroupContextKey is the client.Metadata key to read the log group name from.
-	// The value at this key should be the full log group name (no placeholders).
+	// LogGroupContextKey is an optional client.Metadata key to read the log group
+	// name from. If set, overrides whatever x-aws-log-group header is on the request.
 	LogGroupContextKey string `mapstructure:"log_group_context_key,omitempty"`
 
-	// LogStreamContextKey is the client.Metadata key to read the log stream name from.
-	// If the value is empty at request time, falls back to "default".
+	// LogStreamContextKey is an optional client.Metadata key to read the log stream
+	// name from. If set, overrides whatever x-aws-log-stream header is on the request.
 	LogStreamContextKey string `mapstructure:"log_stream_context_key,omitempty"`
 
 	// LogsProvisionTimeoutSeconds is the HTTP timeout for each CreateLogGroup/CreateLogStream
@@ -58,38 +53,4 @@ type Config struct {
 	// During this period, the extension won't retry creation for the same (group, stream) pair.
 	// Default: 30 seconds.
 	LogsProvisionFailureBackoffSeconds int `mapstructure:"logs_provision_failure_backoff_seconds,omitempty"`
-}
-
-var _ component.Config = (*Config)(nil)
-
-func (cfg *Config) Validate() error {
-	hasStatic := cfg.LogGroupName != ""
-	hasContext := cfg.LogGroupContextKey != ""
-
-	if !hasStatic && !hasContext {
-		return errors.New("either log_group_name or log_group_context_key must be specified")
-	}
-	if hasStatic && hasContext {
-		return errors.New("log_group_name and log_group_context_key are mutually exclusive")
-	}
-
-	if hasStatic {
-		if cfg.LogStreamName == "" {
-			return errors.New("log_stream_name is required when using log_group_name")
-		}
-		if cfg.LogStreamContextKey != "" {
-			return errors.New("log_stream_context_key cannot be used with log_group_name (use log_stream_name instead)")
-		}
-	}
-
-	if hasContext {
-		if cfg.LogStreamContextKey == "" {
-			return errors.New("log_stream_context_key is required when using log_group_context_key")
-		}
-		if cfg.LogStreamName != "" {
-			return errors.New("log_stream_name cannot be used with log_group_context_key (use log_stream_context_key instead)")
-		}
-	}
-
-	return nil
 }

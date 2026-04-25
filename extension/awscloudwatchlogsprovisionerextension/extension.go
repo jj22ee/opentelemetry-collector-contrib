@@ -143,12 +143,21 @@ type provisionerRoundTripper struct {
 }
 
 func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	logGroup, logStream := rt.ext.resolveLogGroupAndStream(req)
+	req2 := req.Clone(req.Context())
+
+	// Apply context key overrides if configured
+	rt.ext.applyContextOverrides(req2)
+
+	// Read the final header values (may have been set by otlphttp static headers,
+	// headers_setter, or overridden above from context keys)
+	logGroup := req2.Header.Get("x-aws-log-group")
+	logStream := req2.Header.Get("x-aws-log-stream")
 
 	if logGroup != "" {
-		req2 := req.Clone(req.Context())
-		req2.Header.Set("x-aws-log-group", logGroup)
-		req2.Header.Set("x-aws-log-stream", logStream)
+		if logStream == "" {
+			logStream = "default"
+			req2.Header.Set("x-aws-log-stream", logStream)
+		}
 
 		rt.ext.ensureProvisioned(req2, logGroup, logStream)
 
@@ -167,34 +176,27 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		return resp, err
 	}
 
-	return rt.base.RoundTrip(req)
+	return rt.base.RoundTrip(req2)
 }
 
-// resolveLogGroupAndStream returns the log group and stream names, either from
-// static config values or by reading from client.Metadata context keys.
-func (e *provisionerExtension) resolveLogGroupAndStream(req *http.Request) (logGroup, logStream string) {
-	// Static mode: values are in the config
-	if e.cfg.LogGroupName != "" {
-		return e.cfg.LogGroupName, e.cfg.LogStreamName
-	}
-
-	// Dynamic mode: read from client.Metadata
+// applyContextOverrides reads log group/stream from client.Metadata and sets
+// them as HTTP headers, overriding any existing header values.
+func (e *provisionerExtension) applyContextOverrides(req *http.Request) {
 	cl := client.FromContext(req.Context())
 
-	groups := cl.Metadata.Get(e.cfg.LogGroupContextKey)
-	if len(groups) > 0 && groups[0] != "" {
-		logGroup = groups[0]
+	if e.cfg.LogGroupContextKey != "" {
+		values := cl.Metadata.Get(e.cfg.LogGroupContextKey)
+		if len(values) > 0 && values[0] != "" {
+			req.Header.Set("x-aws-log-group", values[0])
+		}
 	}
 
-	streams := cl.Metadata.Get(e.cfg.LogStreamContextKey)
-	if len(streams) > 0 && streams[0] != "" {
-		logStream = streams[0]
+	if e.cfg.LogStreamContextKey != "" {
+		values := cl.Metadata.Get(e.cfg.LogStreamContextKey)
+		if len(values) > 0 && values[0] != "" {
+			req.Header.Set("x-aws-log-stream", values[0])
+		}
 	}
-	if logStream == "" {
-		logStream = "default"
-	}
-
-	return logGroup, logStream
 }
 
 // ensureProvisioned creates the log group and stream if not already cached.
