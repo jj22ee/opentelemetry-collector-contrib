@@ -10,7 +10,7 @@ import (
 // Config for the awscloudwatchlogsprovisioner extension.
 //
 // The extension reads x-aws-log-group and x-aws-log-stream headers from outgoing
-// requests and lazily creates the corresponding CloudWatch log groups and streams.
+// requests and creates the corresponding CloudWatch log groups and streams.
 //
 // Header resolution priority:
 //  1. Start with whatever x-aws-log-group/x-aws-log-stream headers are already

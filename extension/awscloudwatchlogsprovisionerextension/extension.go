@@ -52,6 +52,7 @@ type provisionerExtension struct {
 	cfg    *Config
 
 	// host is stored during Start() for lazy resolution of additional_auth.
+	// Follows the same pattern as headers_setter extension.
 	host           component.Host
 	cwLogsClientFn func(region string, timeout time.Duration) (cwLogsClient, error)
 
@@ -120,6 +121,7 @@ func (e *provisionerExtension) getAdditionalAuthExtension() (extensionauth.HTTPC
 func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundTripper, error) {
 	transport := base
 
+	// Chain with additional_auth (e.g., sigv4auth) if configured.
 	additionalAuth, err := e.getAdditionalAuthExtension()
 	if err != nil {
 		return nil, err
@@ -138,11 +140,26 @@ func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundT
 }
 
 type provisionerRoundTripper struct {
-	base http.RoundTripper
-	ext  *provisionerExtension
+	base       http.RoundTripper
+	ext        *provisionerExtension
+	regionOnce sync.Once
+	region     string // extracted once from the first request URL
 }
 
 func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Extract region once from the first request URL. The endpoint is static
+	// (configured in the otlphttp exporter), so all requests share the same region.
+	// CW OTLP endpoint URL pattern: https://logs.<region>.amazonaws.com/v1/logs
+	// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html
+	rt.regionOnce.Do(func() {
+		rt.region = extractRegionFromURL(req.URL.String())
+		if rt.region == "" {
+			rt.ext.logger.Warn("Cannot determine region from endpoint URL — log group creation will be skipped",
+				zap.String("url", req.URL.String()),
+			)
+		}
+	})
+
 	req2 := req.Clone(req.Context())
 
 	// Apply context key overrides if configured
@@ -159,7 +176,9 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 			req2.Header.Set("x-aws-log-stream", logStream)
 		}
 
-		rt.ext.ensureProvisioned(req2, logGroup, logStream)
+		if rt.region != "" {
+			rt.ext.ensureProvisioned(rt.region, logGroup, logStream)
+		}
 
 		resp, err := rt.base.RoundTrip(req2)
 
@@ -176,7 +195,7 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		return resp, err
 	}
 
-	return rt.base.RoundTrip(req2)
+	return rt.base.RoundTrip(req)
 }
 
 // applyContextOverrides reads log group/stream from client.Metadata and sets
@@ -208,7 +227,7 @@ func (e *provisionerExtension) applyContextOverrides(req *http.Request) {
 // expiry), concurrent requests for the same key will block until creation
 // completes. Each key is independent — creation of one log group does not
 // block requests for a different log group.
-func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, logStream string) {
+func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream string) {
 	key := logGroup + "\x00" + logStream
 
 	if val, ok := e.provisioned.Load(key); ok {
@@ -235,14 +254,6 @@ func (e *provisionerExtension) ensureProvisioned(req *http.Request, logGroup, lo
 		close(entry.done)
 		e.inflight.Delete(key)
 	}()
-
-	region := extractRegionFromURL(req.URL.String())
-	if region == "" {
-		e.logger.Warn("Cannot determine region for log group creation",
-			zap.String("logGroup", logGroup),
-		)
-		return
-	}
 
 	// Jitter for thundering-herd mitigation
 	jitter := time.Duration(rand.Int63n(int64(500 * time.Millisecond))) //nolint:gosec
