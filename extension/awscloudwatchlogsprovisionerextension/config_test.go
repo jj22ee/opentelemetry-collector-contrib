@@ -13,49 +13,29 @@ import (
 func TestConfig_Defaults(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
 
-	assert.Equal(t, "", cfg.LogGroupName)
-	assert.Equal(t, "default", cfg.LogStreamName)
-	assert.Equal(t, "undefined", cfg.DefaultPlaceholderValue)
 	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
 	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
-	assert.Nil(t, cfg.AdditionalAuth)
+	assert.Empty(t, cfg.LogGroupContextKey)
+	assert.Empty(t, cfg.LogStreamContextKey)
 }
 
-func TestConfig_WithAuth(t *testing.T) {
+func TestConfig_WithContextKeys(t *testing.T) {
 	authID := component.MustNewID("sigv4auth")
 	cfg := &Config{
-		AdditionalAuth:                     &authID,
-		LogGroupName:                       "/custom/{service.name}",
-		LogStreamName:                      "{host.id}",
-		DefaultPlaceholderValue:            "fallback",
-		LogsProvisionFailureBackoffSeconds: 60,
+		AdditionalAuth:      &authID,
+		LogGroupContextKey:  "cwlogs.log_group",
+		LogStreamContextKey: "cwlogs.log_stream",
 	}
 
 	assert.Equal(t, "sigv4auth", cfg.AdditionalAuth.String())
-	assert.Equal(t, "/custom/{service.name}", cfg.LogGroupName)
-	assert.Equal(t, "{host.id}", cfg.LogStreamName)
-	assert.Equal(t, "fallback", cfg.DefaultPlaceholderValue)
-	assert.Equal(t, 60, cfg.LogsProvisionFailureBackoffSeconds)
+	assert.Equal(t, "cwlogs.log_group", cfg.LogGroupContextKey)
+	assert.Equal(t, "cwlogs.log_stream", cfg.LogStreamContextKey)
 }
 
-func TestConfig_Validate_MissingLogGroupName(t *testing.T) {
+func TestConfig_NoContextKeys(t *testing.T) {
+	// Valid: no context keys — extension just provisions whatever headers are on the request
 	cfg := &Config{}
-	assert.EqualError(t, cfg.Validate(), "log_group_name is required")
-}
-
-func TestConfig_Validate_EmptyLogStreamName(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: ""}
-	assert.EqualError(t, cfg.Validate(), "log_stream_name must not be empty")
-}
-
-func TestConfig_Validate_EmptyDefaultPlaceholderValue(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: ""}
-	assert.EqualError(t, cfg.Validate(), "default_placeholder_value must not be empty")
-}
-
-func TestConfig_Validate_Valid(t *testing.T) {
-	cfg := &Config{LogGroupName: "/test/{service.name}", LogStreamName: "default", DefaultPlaceholderValue: "undefined"}
-	assert.NoError(t, cfg.Validate())
+	assert.Empty(t, cfg.LogGroupContextKey)
 }
 
 func TestFactory_Type(t *testing.T) {

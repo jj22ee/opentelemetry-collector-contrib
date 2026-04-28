@@ -26,9 +26,6 @@ const (
 
 var cwLogsEndpointPattern = regexp.MustCompile(`^https://logs\.([a-z0-9-]+)\.amazonaws\.com`)
 
-// placeholderPattern matches {PlaceholderName} in templates.
-var placeholderPattern = regexp.MustCompile(`\{([^}]+)\}`)
-
 var (
 	_ component.Component             = (*provisionerExtension)(nil)
 	_ extensionauth.HTTPClient        = (*provisionerExtension)(nil)
@@ -163,12 +160,21 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		}
 	})
 
-	logGroup, logStream := rt.ext.resolveHeaders(req)
+	req2 := req.Clone(req.Context())
+
+	// Apply context key overrides if configured
+	rt.ext.applyContextOverrides(req2)
+
+	// Read the final header values (may have been set by otlphttp static headers,
+	// headers_setter, or overridden above from context keys)
+	logGroup := req2.Header.Get("x-aws-log-group")
+	logStream := req2.Header.Get("x-aws-log-stream")
 
 	if logGroup != "" {
-		req2 := req.Clone(req.Context())
-		req2.Header.Set("x-aws-log-group", logGroup)
-		req2.Header.Set("x-aws-log-stream", logStream)
+		if logStream == "" {
+			logStream = "default"
+			req2.Header.Set("x-aws-log-stream", logStream)
+		}
 
 		if rt.region != "" {
 			rt.ext.ensureProvisioned(rt.region, logGroup, logStream)
@@ -192,31 +198,24 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 	return rt.base.RoundTrip(req)
 }
 
-func (e *provisionerExtension) resolveHeaders(req *http.Request) (logGroup, logStream string) {
+// applyContextOverrides reads log group/stream from client.Metadata and sets
+// them as HTTP headers, overriding any existing header values.
+func (e *provisionerExtension) applyContextOverrides(req *http.Request) {
 	cl := client.FromContext(req.Context())
 
-	logGroup = e.resolvePlaceholders(e.cfg.LogGroupName, cl.Metadata)
-	logStream = e.resolvePlaceholders(e.cfg.LogStreamName, cl.Metadata)
-
-	return logGroup, logStream
-}
-
-// resolvePlaceholders replaces {key} placeholders with values from client.Metadata.
-// placeholderPattern is a simple pre-compiled regex (`\{([^}]+)\}`).
-func (e *provisionerExtension) resolvePlaceholders(template string, md client.Metadata) string {
-	return placeholderPattern.ReplaceAllStringFunc(template, func(match string) string {
-		key := match[1 : len(match)-1]
-
-		values := md.Get(key)
+	if e.cfg.LogGroupContextKey != "" {
+		values := cl.Metadata.Get(e.cfg.LogGroupContextKey)
 		if len(values) > 0 && values[0] != "" {
-			return values[0]
+			req.Header.Set("x-aws-log-group", values[0])
 		}
+	}
 
-		// awscloudwatchlogsexporter uses "undefined" as the default for unresolved
-		// placeholders. We use a configurable default (DefaultPlaceholderValue) for
-		// flexibility, defaulting to "undefined".
-		return e.cfg.DefaultPlaceholderValue
-	})
+	if e.cfg.LogStreamContextKey != "" {
+		values := cl.Metadata.Get(e.cfg.LogStreamContextKey)
+		if len(values) > 0 && values[0] != "" {
+			req.Header.Set("x-aws-log-stream", values[0])
+		}
+	}
 }
 
 // ensureProvisioned creates the log group and stream if not already cached.

@@ -20,9 +20,8 @@ func TestNewFactory(t *testing.T) {
 
 func TestCreateDefaultConfig(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
-	assert.Equal(t, "", cfg.LogGroupName)
-	assert.Equal(t, "default", cfg.LogStreamName)
-	assert.Equal(t, "undefined", cfg.DefaultPlaceholderValue)
+	assert.Empty(t, cfg.LogGroupContextKey)
+	assert.Empty(t, cfg.LogStreamContextKey)
 	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
 	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
 	assert.Nil(t, cfg.AdditionalAuth)
