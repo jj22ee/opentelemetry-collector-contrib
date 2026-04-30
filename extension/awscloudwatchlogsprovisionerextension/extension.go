@@ -142,20 +142,29 @@ func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundT
 type provisionerRoundTripper struct {
 	base       http.RoundTripper
 	ext        *provisionerExtension
-	regionOnce sync.Once
-	region     string // extracted once from the first request URL
+	clientOnce sync.Once
+	client     cwLogsClient // created once from the first request URL's region
 }
 
 func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	// Extract region once from the first request URL. The endpoint is static
-	// (configured in the otlphttp exporter), so all requests share the same region.
+	// Create the CW Logs client once from the first request URL. The endpoint is
+	// static (configured in the otlphttp exporter), so all requests share the same
+	// region and client.
 	// CW OTLP endpoint URL pattern: https://logs.<region>.amazonaws.com/v1/logs
 	// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html
-	rt.regionOnce.Do(func() {
-		rt.region = extractRegionFromURL(req.URL.String())
-		if rt.region == "" {
+	rt.clientOnce.Do(func() {
+		region := extractRegionFromURL(req.URL.String())
+		if region == "" {
 			rt.ext.logger.Warn("Cannot determine region from endpoint URL — log group creation will be skipped",
 				zap.String("url", req.URL.String()),
+			)
+			return
+		}
+		var err error
+		rt.client, err = rt.ext.cwLogsClientFn(region, rt.ext.provisionTimeout)
+		if err != nil {
+			rt.ext.logger.Error("Failed to create CW Logs client — log group creation will be skipped",
+				zap.Error(err),
 			)
 		}
 	})
@@ -176,8 +185,8 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 			req2.Header.Set("x-aws-log-stream", logStream)
 		}
 
-		if rt.region != "" {
-			rt.ext.ensureProvisioned(rt.region, logGroup, logStream)
+		if rt.client != nil {
+			rt.ext.ensureProvisioned(rt.client, logGroup, logStream)
 		}
 
 		resp, err := rt.base.RoundTrip(req2)
@@ -227,7 +236,7 @@ func (e *provisionerExtension) applyContextOverrides(req *http.Request) {
 // expiry), concurrent requests for the same key will block until creation
 // completes. Each key is independent — creation of one log group does not
 // block requests for a different log group.
-func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream string) {
+func (e *provisionerExtension) ensureProvisioned(client cwLogsClient, logGroup, logStream string) {
 	key := logGroup + "\x00" + logStream
 
 	if val, ok := e.provisioned.Load(key); ok {
@@ -262,10 +271,9 @@ func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream str
 	e.logger.Debug("Creating log group/stream",
 		zap.String("logGroup", logGroup),
 		zap.String("logStream", logStream),
-		zap.String("region", region),
 	)
 
-	err := e.createLogGroupAndStream(region, logGroup, logStream)
+	err := e.createLogGroupAndStream(client, logGroup, logStream)
 	if err != nil {
 		e.provisioned.Store(key, &provisionStatus{
 			success:   false,
@@ -290,19 +298,14 @@ func (e *provisionerExtension) ensureProvisioned(region, logGroup, logStream str
 	)
 }
 
-func (e *provisionerExtension) createLogGroupAndStream(region, logGroupName, logStreamName string) error {
-	cwClient, err := e.cwLogsClientFn(region, e.provisionTimeout)
-	if err != nil {
-		return fmt.Errorf("failed to create CW Logs client: %w", err)
-	}
-
+func (e *provisionerExtension) createLogGroupAndStream(client cwLogsClient, logGroupName, logStreamName string) error {
 	ctx := context.Background()
 
-	if err := cwClient.CreateLogGroup(ctx, logGroupName); err != nil {
+	if err := client.CreateLogGroup(ctx, logGroupName); err != nil {
 		return fmt.Errorf("CreateLogGroup %q: %w", logGroupName, err)
 	}
 
-	if err := cwClient.CreateLogStream(ctx, logGroupName, logStreamName); err != nil {
+	if err := client.CreateLogStream(ctx, logGroupName, logStreamName); err != nil {
 		return fmt.Errorf("CreateLogStream %q in %q: %w", logStreamName, logGroupName, err)
 	}
 

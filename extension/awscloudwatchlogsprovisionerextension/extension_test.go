@@ -264,13 +264,13 @@ func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Second call should hit cache
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not create again after cache hit")
 }
 
@@ -282,10 +282,10 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 		LogsProvisionFailureBackoffSeconds: 60,
 	}, mockClient)
 
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not retry during backoff")
 }
 
@@ -298,7 +298,7 @@ func TestEnsureProvisioned_Singleflight(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ext.ensureProvisioned("us-east-1", "/test/singleflight", "default")
+			ext.ensureProvisioned(mockClient, "/test/singleflight", "default")
 		}()
 	}
 	wg.Wait()
@@ -402,8 +402,8 @@ func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensureProvisioned("us-east-1", "/test/service-a", "default")
-	ext.ensureProvisioned("us-east-1", "/test/service-b", "default")
+	ext.ensureProvisioned(mockClient, "/test/service-a", "default")
+	ext.ensureProvisioned(mockClient, "/test/service-b", "default")
 
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "different keys should create independently")
 }
@@ -437,11 +437,11 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 		LogsProvisionFailureBackoffSeconds: 1,
 	}, mockClient)
 
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	time.Sleep(1100 * time.Millisecond)
 
-	ext.ensureProvisioned("us-east-1", "/test/group", "default")
+	ext.ensureProvisioned(mockClient, "/test/group", "default")
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "should retry after backoff expires")
 }
