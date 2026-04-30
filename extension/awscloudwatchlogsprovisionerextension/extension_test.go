@@ -6,8 +6,10 @@ package awscloudwatchlogsprovisionerextension
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -171,6 +173,69 @@ func TestRoundTripper_MissingStream_SkipsProvisioning(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, int32(0), mockClient.streamCalls.Load(), "should not provision when stream header missing")
+}
+
+// Test: 400 with "does not exist" evicts cache and re-provisions
+func TestRoundTripper_400DoesNotExist_EvictsAndReprovisions(t *testing.T) {
+	mockClient := &mockCWLogsClient{}
+	ext := newTestExtension(t, &Config{}, mockClient)
+	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
+
+	callCount := 0
+	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		callCount++
+		if callCount == 1 {
+			return &http.Response{
+				StatusCode: http.StatusBadRequest,
+				Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
+			}, nil
+		}
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(""))}, nil
+	})
+
+	rt, err := ext.RoundTripper(base)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
+	req.Header.Set("x-aws-log-group", "/test/group")
+	req.Header.Set("x-aws-log-stream", "default")
+
+	resp, err := rt.RoundTrip(req)
+	require.NoError(t, err)
+
+	// First provision + re-provision after eviction = 2 stream calls
+	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "should re-provision after 400 eviction")
+
+	// Response body should be preserved for the caller
+	body, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(body), "does not exist")
+}
+
+// Test: 400 without "does not exist" does NOT evict cache
+func TestRoundTripper_400OtherError_NoEviction(t *testing.T) {
+	mockClient := &mockCWLogsClient{}
+	ext := newTestExtension(t, &Config{}, mockClient)
+	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
+
+	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Body:       io.NopCloser(strings.NewReader(`{"message":"Invalid log format"}`)),
+		}, nil
+	})
+
+	rt, err := ext.RoundTripper(base)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
+	req.Header.Set("x-aws-log-group", "/test/group")
+	req.Header.Set("x-aws-log-stream", "default")
+
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
+
+	// Only initial provision, no re-provision
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "should not re-provision for non-existence 400")
 }
 
 func TestEnsureProvisioned_Success(t *testing.T) {

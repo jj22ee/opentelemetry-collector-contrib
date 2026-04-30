@@ -10,12 +10,11 @@ This extension is designed for use with the `otlphttp` exporter to send logs to 
 2. Creates the log group and stream via the AWS CloudWatch Logs API if not already cached
 3. Delegates to the inner auth extension (e.g., `sigv4auth`) for request signing
 
-The extension extracts the AWS region from the request URL (e.g., `https://logs.us-east-1.amazonaws.com` → `us-east-1`).
-
 ## Configuration
 
 | Field | Default | Description |
 |---|---|---|
+| `region` | (required) | AWS region for CloudWatch Logs API calls |
 | `additional_auth` | (none) | Inner auth extension for request signing (typically `sigv4auth`) |
 | `logs_provision_timeout_seconds` | `10` | HTTP timeout per CreateLogGroup/CreateLogStream API call (seconds) |
 | `logs_provision_failure_backoff_seconds` | `30` | TTL for negative cache entries after a creation failure (seconds) |
@@ -40,6 +39,7 @@ extensions:
         from_context: cwlogs.log_stream
 
   awscloudwatchlogsprovisioner:
+    region: us-east-1
     additional_auth: headers_setter
 
 receivers:
@@ -100,6 +100,7 @@ extensions:
     service: logs
 
   awscloudwatchlogsprovisioner:
+    region: us-east-1
     additional_auth: sigv4auth/logs
 
 receivers:
