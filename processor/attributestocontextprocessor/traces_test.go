@@ -17,8 +17,7 @@ import (
 func TestTracesProcessor(t *testing.T) {
 	cfg := &Config{
 		Actions: []actions.KeyValue{
-			{Key: "key1", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
-			{Key: "key2", Action: actions.INSERT, Value: "static-value"},
+			{Key: "service", FromResourceAttribute: "service.name"},
 		},
 	}
 
@@ -33,7 +32,7 @@ func TestTracesProcessor(t *testing.T) {
 
 	traces := ptrace.NewTraces()
 	rs := traces.ResourceSpans().AppendEmpty()
-	rs.Resource().Attributes().PutStr("resource.attribute1", "resource-value")
+	rs.Resource().Attributes().PutStr("service.name", "my-service")
 
 	ctx := client.NewContext(t.Context(), client.Info{})
 	err := processor.ConsumeTraces(ctx, traces)
@@ -41,10 +40,8 @@ func TestTracesProcessor(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, processor.Capabilities().MutatesData)
 
-	// Verify metadata was updated
 	clientInfo := client.FromContext(capturedCtx)
-	assert.Equal(t, []string{"resource-value"}, clientInfo.Metadata.Get("key1"))
-	assert.Equal(t, []string{"static-value"}, clientInfo.Metadata.Get("key2"))
+	assert.Equal(t, []string{"my-service"}, clientInfo.Metadata.Get("service"))
 }
 
 type mockTracesConsumer struct {

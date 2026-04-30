@@ -41,7 +41,7 @@ func TestFactory_CreateTraces(t *testing.T) {
 	factory := NewFactory()
 	cfg := &Config{
 		Actions: []actions.KeyValue{
-			{Key: "key1", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
+			{Key: "service", FromResourceAttribute: "service.name"},
 		},
 	}
 
@@ -60,7 +60,7 @@ func TestFactory_CreateMetrics(t *testing.T) {
 	factory := NewFactory()
 	cfg := &Config{
 		Actions: []actions.KeyValue{
-			{Key: "key1", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
+			{Key: "service", FromResourceAttribute: "service.name"},
 		},
 	}
 
@@ -79,7 +79,7 @@ func TestFactory_CreateLogs(t *testing.T) {
 	factory := NewFactory()
 	cfg := &Config{
 		Actions: []actions.KeyValue{
-			{Key: "key1", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
+			{Key: "service", FromResourceAttribute: "service.name"},
 		},
 	}
 

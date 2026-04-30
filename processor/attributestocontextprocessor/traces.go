@@ -33,27 +33,9 @@ func (p *tracesProcessor) ConsumeTraces(ctx context.Context, td ptrace.Traces) e
 		metadataMap[key] = clientInfo.Metadata.Get(key)
 	}
 
-	p.actions.ProcessStatic(metadataMap)
-
-	if p.actions.HasResourceActions() || p.actions.HasAttributeActions() {
-		resourceSpans := td.ResourceSpans()
-		for i := 0; i < resourceSpans.Len(); i++ {
-			rs := resourceSpans.At(i)
-
-			if p.actions.HasResourceActions() {
-				p.actions.ProcessResource(metadataMap, rs.Resource().Attributes())
-			}
-
-			if p.actions.HasAttributeActions() {
-				scopeSpans := rs.ScopeSpans()
-				for j := 0; j < scopeSpans.Len(); j++ {
-					spans := scopeSpans.At(j).Spans()
-					for k := 0; k < spans.Len(); k++ {
-						p.actions.ProcessAttributes(metadataMap, spans.At(k).Attributes())
-					}
-				}
-			}
-		}
+	resourceSpans := td.ResourceSpans()
+	for i := 0; i < resourceSpans.Len(); i++ {
+		p.actions.ProcessResource(metadataMap, resourceSpans.At(i).Resource().Attributes())
 	}
 
 	clientInfo.Metadata = client.NewMetadata(metadataMap)

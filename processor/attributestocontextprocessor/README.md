@@ -1,90 +1,77 @@
 # Attributes to Context Processor
 
-The Attributes to Context processor extracts attributes from telemetry data (traces, metrics, logs) and inserts them into the [client.Metadata](https://pkg.go.dev/go.opentelemetry.io/collector/client#Metadata) stored in the context. This makes resource and record-level attributes available to downstream extensions that read from the request context, such as [Headers Setter](../../extension/headerssetterextension) (via `from_context`) and [AWS CloudWatch Logs Provisioner](../../extension/awscloudwatchlogsprovisionerextension) (via placeholder resolution).
+The Attributes to Context processor copies resource attributes into [client.Metadata](https://pkg.go.dev/go.opentelemetry.io/collector/client#Metadata) stored in the context. This makes resource attributes available to downstream extensions that read from the request context, such as [Headers Setter](../../extension/headerssetterextension) (via `from_context`).
 
 ## Configuration
-
-The processor supports the following configuration:
 
 ```yaml
 processors:
   attributestocontext:
     actions:
-      - key: "key1"
-        action: insert
-        from_resource_attribute: "resource.attribute1"
-      - key: "key2"
-        action: update
-        from_attribute: "attribute1"
-      - key: "key3"
-        action: upsert
-        value: "static-value"
-      - key: "old-key"
-        action: delete
+      - key: "cwlogs.log_group"
+        from_resource_attribute: "cwlogs.log_group"
+      - key: "cwlogs.log_stream"
+        from_resource_attribute: "cwlogs.log_stream"
 ```
 
 ### Configuration Options
 
-- `actions`: List of actions to perform on client metadata
+- `actions`: List of resource attributes to copy to client metadata (required, non-empty)
   - `key`: The key to use in the client metadata (required)
-  - `action`: The action to perform (required)
-    - `insert`: Add key/value when key doesn't exist
-    - `update`: Update key/value when key exists
-    - `upsert`: Insert or update key/value
-    - `delete`: Remove key from client metadata
-  - `from_resource_attribute`: Extract value from a resource attribute
-  - `from_attribute`: Extract value from span/log/metric attributes
-  - `value`: Set a static value
+  - `from_resource_attribute`: The resource attribute to read the value from (required)
 
-Note: For `insert`, `update`, and `upsert` actions, exactly one of `value`, `from_attribute`, or `from_resource_attribute` must be specified. The `delete` action should not specify any value source.
+Each action performs an upsert: it sets the metadata key to the resource attribute value, overwriting any existing value for that key.
 
-## Example: Dynamic log group routing with AWS CloudWatch Logs Provisioner
+## Example: Dynamic log group routing
+
+This example routes OTLP logs to per-service CloudWatch log groups. The `transform` processor builds the log group name from `service.name`, `attributestocontext` copies it to `client.Metadata`, and the `headers_setter` extension sets the HTTP header from metadata.
 
 ```yaml
 processors:
+  transform:
+    log_statements:
+      - context: resource
+        statements:
+          - set(resource.attributes["cwlogs.log_group"], Concat(["/aws/telemetry/", resource.attributes["service.name"]], ""))
+          - set(resource.attributes["cwlogs.log_stream"], "default")
+
   attributestocontext:
     actions:
-      - key: service.name
-        action: upsert
-        from_resource_attribute: service.name
+      - key: cwlogs.log_group
+        from_resource_attribute: cwlogs.log_group
+      - key: cwlogs.log_stream
+        from_resource_attribute: cwlogs.log_stream
 
-extensions:
-  sigv4auth/logs:
-    region: us-east-1
-    service: logs
-  awscloudwatchlogsprovisioner:
-    additional_auth: sigv4auth/logs
-    log_group_name: "/aws/telemetry/{service.name}"
-    log_stream_name: "default"
-
-exporters:
-  otlphttp/cw-logs:
-    endpoint: https://logs.us-east-1.amazonaws.com
-    auth:
-      authenticator: awscloudwatchlogsprovisioner
-```
-
-## Example: Dynamic headers with Headers Setter
-
-```yaml
-processors:
-  resourcedetection:
-    detectors: [ec2]
-    ec2:
-      resource_attributes:
-        host.id:
-          enabled: true
-  attributestocontext:
-    actions:
-      - key: host.id
-        action: insert
-        from_resource_attribute: host.id
+  batch:
+    metadata_keys:
+      - cwlogs.log_group
+      - cwlogs.log_stream
 
 extensions:
   headers_setter:
     headers:
       - key: x-aws-log-group
-        from_context: host.id
+        from_context: cwlogs.log_group
       - key: x-aws-log-stream
-        from_context: host.id
+        from_context: cwlogs.log_stream
+
+  awscloudwatchlogsprovisioner:
+    region: us-east-1
+    additional_auth: headers_setter
+
+exporters:
+  otlphttp/cw-logs:
+    endpoint: https://logs.us-east-1.amazonaws.com
+    logs_endpoint: https://logs.us-east-1.amazonaws.com/v1/logs
+    auth:
+      authenticator: awscloudwatchlogsprovisioner
+    compression: gzip
+
+service:
+  extensions: [sigv4auth/logs, headers_setter, awscloudwatchlogsprovisioner]
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [transform, attributestocontext, batch]
+      exporters: [otlphttp/cw-logs]
 ```

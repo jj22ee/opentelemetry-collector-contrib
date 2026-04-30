@@ -6,7 +6,6 @@ package attributestocontextprocessor // import "github.com/open-telemetry/opente
 import (
 	"context"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/metadata"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -24,9 +23,7 @@ func NewFactory() processor.Factory {
 }
 
 func createDefaultConfig() component.Config {
-	return &Config{
-		Actions: []actions.KeyValue{},
-	}
+	return &Config{}
 }
 
 func createLogsProcessor(

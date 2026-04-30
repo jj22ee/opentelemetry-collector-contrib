@@ -33,27 +33,9 @@ func (p *logsProcessor) ConsumeLogs(ctx context.Context, ld plog.Logs) error {
 		metadataMap[key] = clientInfo.Metadata.Get(key)
 	}
 
-	p.actions.ProcessStatic(metadataMap)
-
-	if p.actions.HasResourceActions() || p.actions.HasAttributeActions() {
-		resourceLogs := ld.ResourceLogs()
-		for i := 0; i < resourceLogs.Len(); i++ {
-			rl := resourceLogs.At(i)
-
-			if p.actions.HasResourceActions() {
-				p.actions.ProcessResource(metadataMap, rl.Resource().Attributes())
-			}
-
-			if p.actions.HasAttributeActions() {
-				scopeLogs := rl.ScopeLogs()
-				for j := 0; j < scopeLogs.Len(); j++ {
-					logs := scopeLogs.At(j).LogRecords()
-					for k := 0; k < logs.Len(); k++ {
-						p.actions.ProcessAttributes(metadataMap, logs.At(k).Attributes())
-					}
-				}
-			}
-		}
+	resourceLogs := ld.ResourceLogs()
+	for i := 0; i < resourceLogs.Len(); i++ {
+		p.actions.ProcessResource(metadataMap, resourceLogs.At(i).Resource().Attributes())
 	}
 
 	clientInfo.Metadata = client.NewMetadata(metadataMap)

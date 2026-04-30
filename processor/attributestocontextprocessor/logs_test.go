@@ -17,8 +17,8 @@ import (
 func TestLogsProcessor(t *testing.T) {
 	cfg := &Config{
 		Actions: []actions.KeyValue{
-			{Key: "key1", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
-			{Key: "key2", Action: actions.INSERT, Value: "static-value"},
+			{Key: "cwlogs.log_group", FromResourceAttribute: "cwlogs.log_group"},
+			{Key: "cwlogs.log_stream", FromResourceAttribute: "cwlogs.log_stream"},
 		},
 	}
 
@@ -33,7 +33,8 @@ func TestLogsProcessor(t *testing.T) {
 
 	logs := plog.NewLogs()
 	rl := logs.ResourceLogs().AppendEmpty()
-	rl.Resource().Attributes().PutStr("resource.attribute1", "resource-value")
+	rl.Resource().Attributes().PutStr("cwlogs.log_group", "/aws/telemetry/my-service")
+	rl.Resource().Attributes().PutStr("cwlogs.log_stream", "default")
 
 	ctx := client.NewContext(t.Context(), client.Info{})
 	err := processor.ConsumeLogs(ctx, logs)
@@ -41,10 +42,9 @@ func TestLogsProcessor(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, processor.Capabilities().MutatesData)
 
-	// Verify metadata was updated
 	clientInfo := client.FromContext(capturedCtx)
-	assert.Equal(t, []string{"resource-value"}, clientInfo.Metadata.Get("key1"))
-	assert.Equal(t, []string{"static-value"}, clientInfo.Metadata.Get("key2"))
+	assert.Equal(t, []string{"/aws/telemetry/my-service"}, clientInfo.Metadata.Get("cwlogs.log_group"))
+	assert.Equal(t, []string{"default"}, clientInfo.Metadata.Get("cwlogs.log_stream"))
 }
 
 type mockLogsConsumer struct {

@@ -27,29 +27,8 @@ func (cfg *Config) Validate() error {
 		if action.Key == "" {
 			return fmt.Errorf("action %d: missing required field \"key\"", i)
 		}
-		if action.Action == "" {
-			return fmt.Errorf("action %d: missing required field \"action\"", i)
-		}
-
-		sourceCount := 0
-		if action.Value != nil {
-			sourceCount++
-		}
-		if action.FromAttribute != "" {
-			sourceCount++
-		}
-		if action.FromResourceAttribute != "" {
-			sourceCount++
-		}
-
-		if action.Action == actions.DELETE {
-			if sourceCount != 0 {
-				return fmt.Errorf("action %d: DELETE action should not specify value sources", i)
-			}
-		} else {
-			if sourceCount != 1 {
-				return fmt.Errorf("action %d: exactly one of \"value\", \"from_attribute\", or \"from_resource_attribute\" must be specified", i)
-			}
+		if action.FromResourceAttribute == "" {
+			return fmt.Errorf("action %d: missing required field \"from_resource_attribute\"", i)
 		}
 	}
 

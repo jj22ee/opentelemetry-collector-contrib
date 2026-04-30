@@ -10,7 +10,6 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 	"go.opentelemetry.io/collector/confmap/xconfmap"
 )
@@ -18,74 +17,23 @@ import (
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		id       component.ID
-		expected component.Config
-	}{
-		{
-			id: component.NewIDWithName(component.MustNewType("attributestocontext"), "insert"),
-			expected: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "key1", Action: actions.INSERT, Value: "static-value"},
-					{Key: "key2", Action: actions.INSERT, FromResourceAttribute: "resource.attribute1"},
-				},
-			},
-		},
-		{
-			id: component.NewIDWithName(component.MustNewType("attributestocontext"), "update"),
-			expected: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "key1", Action: actions.UPDATE, FromAttribute: "attribute1"},
-					{Key: "key2", Action: actions.UPDATE, Value: "updated-value"},
-				},
-			},
-		},
-		{
-			id: component.NewIDWithName(component.MustNewType("attributestocontext"), "upsert"),
-			expected: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "key1", Action: actions.UPSERT, FromResourceAttribute: "service.name"},
-					{Key: "key2", Action: actions.UPSERT, Value: "upserted-value"},
-				},
-			},
-		},
-		{
-			id: component.NewIDWithName(component.MustNewType("attributestocontext"), "delete"),
-			expected: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "old-key", Action: actions.DELETE},
-				},
-			},
-		},
-		{
-			id: component.NewIDWithName(component.MustNewType("attributestocontext"), "mixed"),
-			expected: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "static-key", Action: actions.INSERT, Value: "static-value"},
-					{Key: "resource-key", Action: actions.UPDATE, FromResourceAttribute: "host.name"},
-					{Key: "attribute-key", Action: actions.UPSERT, FromAttribute: "span.id"},
-					{Key: "remove-key", Action: actions.DELETE},
-				},
-			},
-		},
-	}
+	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
+	require.NoError(t, err)
 
-	for _, tt := range tests {
-		t.Run(tt.id.String(), func(t *testing.T) {
-			cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
-			require.NoError(t, err)
+	factory := NewFactory()
+	cfg := factory.CreateDefaultConfig()
 
-			factory := NewFactory()
-			cfg := factory.CreateDefaultConfig()
+	sub, err := cm.Sub("attributestocontext")
+	require.NoError(t, err)
+	require.NoError(t, sub.Unmarshal(cfg))
 
-			sub, err := cm.Sub(tt.id.String())
-			require.NoError(t, err)
-			require.NoError(t, sub.Unmarshal(cfg))
-
-			assert.NoError(t, xconfmap.Validate(cfg))
-			assert.Equal(t, tt.expected, cfg)
-		})
-	}
+	assert.NoError(t, xconfmap.Validate(cfg))
+	assert.Equal(t, &Config{
+		Actions: []actions.KeyValue{
+			{Key: "cwlogs.log_group", FromResourceAttribute: "cwlogs.log_group"},
+			{Key: "cwlogs.log_stream", FromResourceAttribute: "cwlogs.log_stream"},
+		},
+	}, cfg)
 }
 
 func TestConfig_Validate(t *testing.T) {
@@ -96,13 +44,12 @@ func TestConfig_Validate(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name: "valid delete action",
+			name: "valid",
 			config: &Config{
 				Actions: []actions.KeyValue{
-					{Key: "key1", Action: actions.DELETE},
+					{Key: "key1", FromResourceAttribute: "service.name"},
 				},
 			},
-			wantErr: "",
 		},
 		{
 			name: "empty actions",
@@ -112,49 +59,27 @@ func TestConfig_Validate(t *testing.T) {
 			wantErr: "missing required field \"actions\"",
 		},
 		{
+			name:    "nil actions",
+			config:  &Config{},
+			wantErr: "missing required field \"actions\"",
+		},
+		{
 			name: "missing key",
 			config: &Config{
 				Actions: []actions.KeyValue{
-					{Action: actions.INSERT, Value: "test"},
+					{FromResourceAttribute: "service.name"},
 				},
 			},
 			wantErr: "action 0: missing required field \"key\"",
 		},
 		{
-			name: "missing action",
+			name: "missing from_resource_attribute",
 			config: &Config{
 				Actions: []actions.KeyValue{
-					{Key: "test", Value: "test"},
+					{Key: "key1"},
 				},
 			},
-			wantErr: "action 0: missing required field \"action\"",
-		},
-		{
-			name: "no source specified",
-			config: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "test", Action: actions.INSERT},
-				},
-			},
-			wantErr: "action 0: exactly one of \"value\", \"from_attribute\", or \"from_resource_attribute\" must be specified",
-		},
-		{
-			name: "multiple sources specified",
-			config: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "test", Action: actions.INSERT, Value: "test", FromAttribute: "attr"},
-				},
-			},
-			wantErr: "action 0: exactly one of \"value\", \"from_attribute\", or \"from_resource_attribute\" must be specified",
-		},
-		{
-			name: "delete action with value source",
-			config: &Config{
-				Actions: []actions.KeyValue{
-					{Key: "test", Action: actions.DELETE, Value: "test"},
-				},
-			},
-			wantErr: "action 0: DELETE action should not specify value sources",
+			wantErr: "action 0: missing required field \"from_resource_attribute\"",
 		},
 	}
 
