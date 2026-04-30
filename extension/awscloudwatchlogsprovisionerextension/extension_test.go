@@ -81,10 +81,14 @@ func (h *mockHost) GetExtensions() map[component.ID]component.Component {
 // --- Helper to build extension ---
 
 func newTestExtension(t *testing.T, cfg *Config, mockClient *mockCWLogsClient) *provisionerExtension {
+	if cfg.Region == "" {
+		cfg.Region = "us-east-1"
+	}
 	ext := newExtension(zaptest.NewLogger(t), cfg)
 	ext.cwLogsClientFn = func(_ string, _ time.Duration) (cwLogsClient, error) {
 		return mockClient, nil
 	}
+	ext.client = mockClient
 	return ext
 }
 
@@ -95,25 +99,6 @@ func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // --- Tests ---
-
-func TestExtractRegionFromURL(t *testing.T) {
-	tests := []struct {
-		url      string
-		expected string
-	}{
-		{"https://logs.us-east-1.amazonaws.com/v1/logs", "us-east-1"},
-		{"https://logs.eu-west-1.amazonaws.com/v1/logs", "eu-west-1"},
-		{"https://logs.ap-southeast-2.amazonaws.com", "ap-southeast-2"},
-		{"https://example.com/v1/logs", ""},
-		{"", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.url, func(t *testing.T) {
-			assert.Equal(t, tt.expected, extractRegionFromURL(tt.url))
-		})
-	}
-}
 
 func TestRoundTripper_StaticHeaders(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
@@ -165,8 +150,8 @@ func TestRoundTripper_NoLogGroup_PassesThrough(t *testing.T) {
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should not provision when no log group header")
 }
 
-// Test: missing log stream defaults to "default" for provisioning
-func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
+// Test: missing log stream — skips provisioning (both headers required)
+func TestRoundTripper_MissingStream_SkipsProvisioning(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
@@ -180,28 +165,26 @@ func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 	req.Header.Set("x-aws-log-group", "/my/group")
-	// No x-aws-log-stream header — provisioner defaults to "default" internally
+	// No x-aws-log-stream header — both required for provisioning
 
 	_, err = rt.RoundTrip(req)
 	require.NoError(t, err)
 
-	// Provisioning still happened with "default" stream (stream-first succeeds)
-	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
-	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
+	assert.Equal(t, int32(0), mockClient.streamCalls.Load(), "should not provision when stream header missing")
 }
 
 func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 
 	// Stream-first: CreateLogStream succeeds, no group creation needed
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Second call should hit cache
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should not create again after cache hit")
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "should not create again after cache hit")
 }
@@ -216,11 +199,11 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 		LogsProvisionFailureBackoffSeconds: 60,
 	}, mockClient)
 
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 	// Stream fails (not found) → group creation attempted → fails (throttled)
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not retry during backoff")
 }
 
@@ -233,7 +216,7 @@ func TestEnsureProvisioned_Singleflight(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ext.ensure(context.Background(), mockClient, "/test/singleflight", "default")
+			ext.ensure(context.Background(), "/test/singleflight", "default")
 		}()
 	}
 	wg.Wait()
@@ -331,34 +314,14 @@ func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensure(context.Background(), mockClient, "/test/service-a", "default")
-	ext.ensure(context.Background(), mockClient, "/test/service-b", "default")
+	ext.ensure(context.Background(), "/test/service-a", "default")
+	ext.ensure(context.Background(), "/test/service-b", "default")
 
 	// Stream-first: both streams succeed without needing group creation
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "different keys should create independently")
 }
 
-func TestRoundTrip_NoRegionInURL_SkipsCreation(t *testing.T) {
-	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{}, mockClient)
-	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
-
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 200}, nil
-	})
-
-	rt, err := ext.RoundTripper(base)
-	require.NoError(t, err)
-
-	req := httptest.NewRequest(http.MethodPost, "https://example.com/v1/logs", nil)
-	req.Header.Set("x-aws-log-group", "/test/group")
-
-	_, err = rt.RoundTrip(req)
-	require.NoError(t, err)
-
-	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should skip creation when region unknown")
-}
 
 func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
@@ -370,11 +333,11 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 		LogsProvisionFailureBackoffSeconds: 1,
 	}, mockClient)
 
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	time.Sleep(1100 * time.Millisecond)
 
-	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), "/test/group", "default")
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "should retry after backoff expires")
 }

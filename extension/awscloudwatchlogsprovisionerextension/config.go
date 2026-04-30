@@ -4,6 +4,8 @@
 package awscloudwatchlogsprovisionerextension // import "github.com/open-telemetry/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension"
 
 import (
+	"errors"
+
 	"go.opentelemetry.io/collector/component"
 )
 
@@ -14,6 +16,9 @@ import (
 // streams. Headers can be set by the otlphttp exporter (static) or by the
 // headers_setter extension (dynamic, from client.Metadata).
 type Config struct {
+	// Region is the AWS region for CloudWatch Logs API calls (required).
+	Region string `mapstructure:"region"`
+
 	// AdditionalAuth is a reference to the inner auth extension (typically sigv4auth)
 	// that this extension chains with for request signing. Follows the same pattern
 	// as headers_setter's additional_auth field.
@@ -28,4 +33,11 @@ type Config struct {
 	// During this period, the extension won't retry creation for the same (group, stream) pair.
 	// Default: 30 seconds.
 	LogsProvisionFailureBackoffSeconds int `mapstructure:"logs_provision_failure_backoff_seconds,omitempty"`
+}
+
+func (cfg *Config) Validate() error {
+	if cfg.Region == "" {
+		return errors.New("region is required")
+	}
+	return nil
 }
