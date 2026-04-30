@@ -6,9 +6,10 @@ package awscloudwatchlogsprovisionerextension // import "github.com/open-telemet
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"io"
 	"net/http"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"go.opentelemetry.io/collector/extension/extensionauth"
 	"go.opentelemetry.io/collector/extension/extensioncapabilities"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 )
 
 const (
@@ -31,13 +33,9 @@ var (
 	_ extensioncapabilities.Dependent = (*provisionerExtension)(nil)
 )
 
-type provisionStatus struct {
+type cacheEntry struct {
 	success   bool
-	timestamp time.Time
-}
-
-type inflightEntry struct {
-	done chan struct{}
+	expiresAt time.Time // only used for failed entries
 }
 
 // cwLogsClient abstracts the CloudWatch Logs API for testability.
@@ -55,9 +53,9 @@ type provisionerExtension struct {
 	host           component.Host
 	cwLogsClientFn func(region string, timeout time.Duration) (cwLogsClient, error)
 
-	provisioned      sync.Map
-	inflight         sync.Map
-	failureBackoff   time.Duration
+	cache          sync.Map
+	sfGroup        singleflight.Group
+	failureBackoff time.Duration
 	provisionTimeout time.Duration
 }
 
@@ -178,110 +176,105 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		}
 
 		if rt.client != nil {
-			rt.ext.ensureProvisioned(rt.client, logGroup, logStream)
+			rt.ext.ensure(req.Context(), rt.client, logGroup, logStream)
 		}
 
 		resp, err := rt.base.RoundTrip(req)
+		if err != nil {
+			return resp, err
+		}
 
-		// TODO: Add cache eviction here when the CW OTLP endpoint differentiates
-		// "The specified log group does not exist" from other 400 errors with a
-		// distinct status code. Currently, non-existent log groups return HTTP 400
-		// — the same code used for other validation errors — making it unsafe to
-		// evict based on status code alone.
-		// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html#CloudWatch-LimitsandRestrictions
-		//
-		// Possible workaround: read the response body and check for the string
-		// "The specified log group does not exist" to distinguish from other 400s.
+		// If the CW OTLP endpoint returns 400 with "does not exist", evict the
+		// cache entry so the next request re-provisions.
+		if resp.StatusCode == http.StatusBadRequest && rt.client != nil {
+			body, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if readErr == nil && strings.Contains(string(body), "does not exist") {
+				rt.ext.evict(logGroup, logStream)
+				rt.ext.ensure(req.Context(), rt.client, logGroup, logStream)
+			}
+			resp.Body = io.NopCloser(strings.NewReader(string(body)))
+		}
 
-		return resp, err
+		return resp, nil
 	}
 
 	return rt.base.RoundTrip(req)
 }
 
-// ensureProvisioned creates the log group and stream if not already cached.
-// Thread safety: provisioned and inflight are sync.Map — all operations (Load,
-// Store, LoadOrStore, Delete) are safe for concurrent use without additional locks.
-// The inflightEntry channel provides singleflight semantics: the first goroutine
-// for a given key does the creation work while concurrent goroutines block on the
-// channel. During any creation attempt (including retries after negative cache
-// expiry), concurrent requests for the same key will block until creation
-// completes. Each key is independent — creation of one log group does not
-// block requests for a different log group.
-func (e *provisionerExtension) ensureProvisioned(client cwLogsClient, logGroup, logStream string) {
-	key := logGroup + "\x00" + logStream
-
-	if val, ok := e.provisioned.Load(key); ok {
-		status := val.(*provisionStatus)
-		if status.success {
-			return
-		}
-		if time.Since(status.timestamp) < e.failureBackoff {
-			return
-		}
-	}
-
-	entry := &inflightEntry{done: make(chan struct{})}
-	if existing, loaded := e.inflight.LoadOrStore(key, entry); loaded {
-		existingEntry := existing.(*inflightEntry)
-		// Block until the first goroutine completes creation. This is the
-		// singleflight pattern — only one API call per key, others wait.
-		// The wait is bounded by jitter (0-500ms) + API timeout (10s per call, 2 calls).
-		<-existingEntry.done
-		return
-	}
-
-	defer func() {
-		close(entry.done)
-		e.inflight.Delete(key)
-	}()
-
-	// Jitter for thundering-herd mitigation
-	jitter := time.Duration(rand.Int63n(int64(500 * time.Millisecond))) //nolint:gosec
-	time.Sleep(jitter)
-
-	e.logger.Debug("Creating log group/stream",
-		zap.String("logGroup", logGroup),
-		zap.String("logStream", logStream),
-	)
-
-	err := e.createLogGroupAndStream(client, logGroup, logStream)
-	if err != nil {
-		e.provisioned.Store(key, &provisionStatus{
-			success:   false,
-			timestamp: time.Now(),
-		})
-		e.logger.Warn("Failed to create log group/stream",
-			zap.String("logGroup", logGroup),
-			zap.String("logStream", logStream),
-			zap.Duration("backoff", e.failureBackoff),
-			zap.Error(err),
-		)
-		return
-	}
-
-	e.provisioned.Store(key, &provisionStatus{
-		success:   true,
-		timestamp: time.Now(),
-	})
-	e.logger.Debug("Successfully created log group/stream",
-		zap.String("logGroup", logGroup),
-		zap.String("logStream", logStream),
-	)
+func cacheKey(logGroup, logStream string) string {
+	return logGroup + "\x00" + logStream
 }
 
-func (e *provisionerExtension) createLogGroupAndStream(client cwLogsClient, logGroupName, logStreamName string) error {
-	ctx := context.Background()
+// ensure creates the log group and stream if not already cached.
+// Uses singleflight to deduplicate concurrent creation attempts for the same key.
+func (e *provisionerExtension) ensure(ctx context.Context, client cwLogsClient, logGroup, logStream string) {
+	key := cacheKey(logGroup, logStream)
 
-	if err := client.CreateLogGroup(ctx, logGroupName); err != nil {
-		return fmt.Errorf("CreateLogGroup %q: %w", logGroupName, err)
+	if entry, ok := e.cache.Load(key); ok {
+		ce := entry.(cacheEntry)
+		if ce.success || time.Now().Before(ce.expiresAt) {
+			return
+		}
 	}
 
-	if err := client.CreateLogStream(ctx, logGroupName, logStreamName); err != nil {
-		return fmt.Errorf("CreateLogStream %q in %q: %w", logStreamName, logGroupName, err)
+	_, _, _ = e.sfGroup.Do(key, func() (any, error) {
+		// Double-check cache after acquiring singleflight.
+		if entry, ok := e.cache.Load(key); ok {
+			ce := entry.(cacheEntry)
+			if ce.success || time.Now().Before(ce.expiresAt) {
+				return nil, nil
+			}
+		}
+
+		err := e.provision(ctx, client, logGroup, logStream)
+		if err != nil {
+			e.cache.Store(key, cacheEntry{expiresAt: time.Now().Add(e.failureBackoff)})
+			e.logger.Warn("Failed to create log group/stream",
+				zap.String("logGroup", logGroup),
+				zap.String("logStream", logStream),
+				zap.Duration("backoff", e.failureBackoff),
+				zap.Error(err),
+			)
+		} else {
+			e.cache.Store(key, cacheEntry{success: true})
+			e.logger.Debug("Successfully provisioned log group/stream",
+				zap.String("logGroup", logGroup),
+				zap.String("logStream", logStream),
+			)
+		}
+		return nil, nil
+	})
+}
+
+// provision creates the log stream (and log group if needed).
+// Tries stream first — if the group doesn't exist, creates it and retries.
+func (e *provisionerExtension) provision(ctx context.Context, client cwLogsClient, logGroup, logStream string) error {
+	err := client.CreateLogStream(ctx, logGroup, logStream)
+	if err == nil {
+		return nil
+	}
+
+	if !isNotFound(err) {
+		return fmt.Errorf("CreateLogStream %q in %q: %w", logStream, logGroup, err)
+	}
+
+	e.logger.Debug("Log group not found, creating",
+		zap.String("logGroup", logGroup),
+	)
+	if grpErr := client.CreateLogGroup(ctx, logGroup); grpErr != nil {
+		return fmt.Errorf("CreateLogGroup %q: %w", logGroup, grpErr)
+	}
+
+	if retryErr := client.CreateLogStream(ctx, logGroup, logStream); retryErr != nil {
+		return fmt.Errorf("CreateLogStream %q in %q (retry): %w", logStream, logGroup, retryErr)
 	}
 
 	return nil
+}
+
+func (e *provisionerExtension) evict(logGroup, logStream string) {
+	e.cache.Delete(cacheKey(logGroup, logStream))
 }
 
 func extractRegionFromURL(url string) string {

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
@@ -136,7 +138,9 @@ func TestRoundTripper_StaticHeaders(t *testing.T) {
 
 	assert.Equal(t, "/static/my-group", capturedReq.Header.Get("x-aws-log-group"))
 	assert.Equal(t, "my-stream", capturedReq.Header.Get("x-aws-log-stream"))
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
+	// Stream-first: CreateLogStream succeeds so CreateLogGroup is not called
+	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 }
 
 // Test: no log group at all — request passes through without provisioning
@@ -181,8 +185,8 @@ func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 	_, err = rt.RoundTrip(req)
 	require.NoError(t, err)
 
-	// Provisioning still happened with "default" stream
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
+	// Provisioning still happened with "default" stream (stream-first succeeds)
+	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 }
 
@@ -190,28 +194,33 @@ func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
 
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
+	// Stream-first: CreateLogStream succeeds, no group creation needed
+	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Second call should hit cache
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not create again after cache hit")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should not create again after cache hit")
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "should not create again after cache hit")
 }
 
 func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
+	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
-		createGroupErr: fmt.Errorf("throttled"),
+		createStreamErr: notFoundErr,
+		createGroupErr:  fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
 		LogsProvisionFailureBackoffSeconds: 60,
 	}, mockClient)
 
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
+	// Stream fails (not found) → group creation attempted → fails (throttled)
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not retry during backoff")
 }
 
@@ -224,12 +233,12 @@ func TestEnsureProvisioned_Singleflight(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ext.ensureProvisioned(mockClient, "/test/singleflight", "default")
+			ext.ensure(context.Background(), mockClient, "/test/singleflight", "default")
 		}()
 	}
 	wg.Wait()
 
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "singleflight should dedup concurrent creation")
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "singleflight should dedup concurrent creation")
 }
 
 func TestStart_StoresHost(t *testing.T) {
@@ -322,10 +331,12 @@ func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensureProvisioned(mockClient, "/test/service-a", "default")
-	ext.ensureProvisioned(mockClient, "/test/service-b", "default")
+	ext.ensure(context.Background(), mockClient, "/test/service-a", "default")
+	ext.ensure(context.Background(), mockClient, "/test/service-b", "default")
 
-	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "different keys should create independently")
+	// Stream-first: both streams succeed without needing group creation
+	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
+	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "different keys should create independently")
 }
 
 func TestRoundTrip_NoRegionInURL_SkipsCreation(t *testing.T) {
@@ -350,18 +361,20 @@ func TestRoundTrip_NoRegionInURL_SkipsCreation(t *testing.T) {
 }
 
 func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
+	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
-		createGroupErr: fmt.Errorf("throttled"),
+		createStreamErr: notFoundErr,
+		createGroupErr:  fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
 		LogsProvisionFailureBackoffSeconds: 1,
 	}, mockClient)
 
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	time.Sleep(1100 * time.Millisecond)
 
-	ext.ensureProvisioned(mockClient, "/test/group", "default")
+	ext.ensure(context.Background(), mockClient, "/test/group", "default")
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "should retry after backoff expires")
 }

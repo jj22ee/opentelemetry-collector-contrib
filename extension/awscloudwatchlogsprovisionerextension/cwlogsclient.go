@@ -59,3 +59,8 @@ func isAlreadyExists(err error) bool {
 	var alreadyExists *types.ResourceAlreadyExistsException
 	return errors.As(err, &alreadyExists)
 }
+
+func isNotFound(err error) bool {
+	var notFound *types.ResourceNotFoundException
+	return errors.As(err, &notFound)
+}

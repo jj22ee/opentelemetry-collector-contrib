@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.13
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.46.0
 	github.com/stretchr/testify v1.10.0
-	go.opentelemetry.io/collector/client v1.30.0
 	go.opentelemetry.io/collector/component v1.30.0
 	go.opentelemetry.io/collector/component/componenttest v0.124.0
 	go.opentelemetry.io/collector/extension v1.30.0
@@ -15,6 +14,7 @@ require (
 	go.opentelemetry.io/collector/extension/extensioncapabilities v0.124.0
 	go.opentelemetry.io/collector/extension/extensiontest v0.124.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/sync v0.19.0
 )
 
 require (
