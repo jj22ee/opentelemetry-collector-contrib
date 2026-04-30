@@ -15,7 +15,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/collector/client"
 	"go.opentelemetry.io/collector/component"
 	"go.uber.org/zap/zaptest"
 )
@@ -114,8 +113,7 @@ func TestExtractRegionFromURL(t *testing.T) {
 	}
 }
 
-// Test: static headers from exporter, no context keys — extension just provisions
-func TestRoundTripper_StaticHeaders_NoContextKeys(t *testing.T) {
+func TestRoundTripper_StaticHeaders(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
@@ -129,7 +127,6 @@ func TestRoundTripper_StaticHeaders_NoContextKeys(t *testing.T) {
 	rt, err := ext.RoundTripper(base)
 	require.NoError(t, err)
 
-	// Simulate otlphttp exporter setting static headers
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 	req.Header.Set("x-aws-log-group", "/static/my-group")
 	req.Header.Set("x-aws-log-stream", "my-stream")
@@ -137,80 +134,9 @@ func TestRoundTripper_StaticHeaders_NoContextKeys(t *testing.T) {
 	_, err = rt.RoundTrip(req)
 	require.NoError(t, err)
 
-	// Headers passed through unchanged
 	assert.Equal(t, "/static/my-group", capturedReq.Header.Get("x-aws-log-group"))
 	assert.Equal(t, "my-stream", capturedReq.Header.Get("x-aws-log-stream"))
-	// Log group was provisioned
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
-}
-
-// Test: context keys override existing headers
-func TestRoundTripper_ContextKeysOverrideHeaders(t *testing.T) {
-	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{
-		LogGroupContextKey:  "cwlogs.log_group",
-		LogStreamContextKey: "cwlogs.log_stream",
-	}, mockClient)
-	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
-
-	var capturedReq *http.Request
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		capturedReq = req
-		return &http.Response{StatusCode: 200}, nil
-	})
-
-	rt, err := ext.RoundTripper(base)
-	require.NoError(t, err)
-
-	md := client.NewMetadata(map[string][]string{
-		"cwlogs.log_group":  {"/dynamic/pet-clinic"},
-		"cwlogs.log_stream": {"instance-456"},
-	})
-	ctx := client.NewContext(context.Background(), client.Info{Metadata: md})
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	req.Header.Set("x-aws-log-group", "/old/static/group")
-	req.Header.Set("x-aws-log-stream", "old-stream")
-	req = req.WithContext(ctx)
-
-	_, err = rt.RoundTrip(req)
-	require.NoError(t, err)
-
-	// Context values override the original headers
-	assert.Equal(t, "/dynamic/pet-clinic", capturedReq.Header.Get("x-aws-log-group"))
-	assert.Equal(t, "instance-456", capturedReq.Header.Get("x-aws-log-stream"))
-	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
-}
-
-// Test: context key set but metadata empty — falls back to existing header
-func TestRoundTripper_ContextKeyEmpty_FallsBackToHeader(t *testing.T) {
-	mockClient := &mockCWLogsClient{}
-	ext := newTestExtension(t, &Config{
-		LogGroupContextKey: "cwlogs.log_group",
-	}, mockClient)
-	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
-
-	var capturedReq *http.Request
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		capturedReq = req
-		return &http.Response{StatusCode: 200}, nil
-	})
-
-	rt, err := ext.RoundTripper(base)
-	require.NoError(t, err)
-
-	// Empty metadata — context key configured but no value
-	ctx := client.NewContext(context.Background(), client.Info{})
-	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	req.Header.Set("x-aws-log-group", "/fallback/group")
-	req.Header.Set("x-aws-log-stream", "fallback-stream")
-	req = req.WithContext(ctx)
-
-	_, err = rt.RoundTrip(req)
-	require.NoError(t, err)
-
-	// Original headers preserved since context was empty
-	assert.Equal(t, "/fallback/group", capturedReq.Header.Get("x-aws-log-group"))
-	assert.Equal(t, "fallback-stream", capturedReq.Header.Get("x-aws-log-stream"))
 }
 
 // Test: no log group at all — request passes through without provisioning
@@ -235,15 +161,13 @@ func TestRoundTripper_NoLogGroup_PassesThrough(t *testing.T) {
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should not provision when no log group header")
 }
 
-// Test: missing log stream defaults to "default"
+// Test: missing log stream defaults to "default" for provisioning
 func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	var capturedReq *http.Request
 	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		capturedReq = req
 		return &http.Response{StatusCode: 200}, nil
 	})
 
@@ -252,12 +176,14 @@ func TestRoundTripper_MissingStream_DefaultsToDefault(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
 	req.Header.Set("x-aws-log-group", "/my/group")
-	// No x-aws-log-stream header
+	// No x-aws-log-stream header — provisioner defaults to "default" internally
 
 	_, err = rt.RoundTrip(req)
 	require.NoError(t, err)
 
-	assert.Equal(t, "default", capturedReq.Header.Get("x-aws-log-stream"))
+	// Provisioning still happened with "default" stream
+	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 }
 
 func TestEnsureProvisioned_Success(t *testing.T) {
@@ -348,9 +274,7 @@ func TestChainingWithAdditionalAuth(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 
 	ext := newTestExtension(t, &Config{
-		AdditionalAuth:      &authID,
-		LogGroupContextKey:  "cwlogs.log_group",
-		LogStreamContextKey: "cwlogs.log_stream",
+		AdditionalAuth: &authID,
 	}, mockClient)
 
 	mockAuth := &mockAuthWithHeader{
@@ -372,13 +296,9 @@ func TestChainingWithAdditionalAuth(t *testing.T) {
 	rt, err := ext.RoundTripper(base)
 	require.NoError(t, err)
 
-	md := client.NewMetadata(map[string][]string{
-		"cwlogs.log_group":  {"/test/my-service"},
-		"cwlogs.log_stream": {"default"},
-	})
-	ctx := client.NewContext(context.Background(), client.Info{Metadata: md})
 	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
-	req = req.WithContext(ctx)
+	req.Header.Set("x-aws-log-group", "/test/my-service")
+	req.Header.Set("x-aws-log-stream", "default")
 
 	_, err = rt.RoundTrip(req)
 	require.NoError(t, err)

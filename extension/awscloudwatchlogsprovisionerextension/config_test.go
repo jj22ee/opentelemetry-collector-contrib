@@ -15,27 +15,16 @@ func TestConfig_Defaults(t *testing.T) {
 
 	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
 	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
-	assert.Empty(t, cfg.LogGroupContextKey)
-	assert.Empty(t, cfg.LogStreamContextKey)
+	assert.Nil(t, cfg.AdditionalAuth)
 }
 
-func TestConfig_WithContextKeys(t *testing.T) {
+func TestConfig_WithAdditionalAuth(t *testing.T) {
 	authID := component.MustNewID("sigv4auth")
 	cfg := &Config{
-		AdditionalAuth:      &authID,
-		LogGroupContextKey:  "cwlogs.log_group",
-		LogStreamContextKey: "cwlogs.log_stream",
+		AdditionalAuth: &authID,
 	}
 
 	assert.Equal(t, "sigv4auth", cfg.AdditionalAuth.String())
-	assert.Equal(t, "cwlogs.log_group", cfg.LogGroupContextKey)
-	assert.Equal(t, "cwlogs.log_stream", cfg.LogStreamContextKey)
-}
-
-func TestConfig_NoContextKeys(t *testing.T) {
-	// Valid: no context keys — extension just provisions whatever headers are on the request
-	cfg := &Config{}
-	assert.Empty(t, cfg.LogGroupContextKey)
 }
 
 func TestFactory_Type(t *testing.T) {

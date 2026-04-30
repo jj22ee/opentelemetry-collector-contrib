@@ -1,35 +1,22 @@
 # AWS CloudWatch Logs Provisioner Extension
 
-The AWS CloudWatch Logs Provisioner extension creates CloudWatch log groups and streams on first encounter and sets `x-aws-log-group` and `x-aws-log-stream` HTTP headers. It implements [`extensionauth.HTTPClient`](https://pkg.go.dev/go.opentelemetry.io/collector/extension/extensionauth#HTTPClient) to participate in the HTTP auth chain.
+The AWS CloudWatch Logs Provisioner extension creates CloudWatch log groups and streams on first encounter. It implements [`extensionauth.HTTPClient`](https://pkg.go.dev/go.opentelemetry.io/collector/extension/extensionauth#HTTPClient) to participate in the HTTP auth chain.
 
 This extension is designed for use with the `otlphttp` exporter to send logs to the [CloudWatch OTLP endpoint](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-OTLPEndpoint.html), which requires pre-existing log groups and the `x-aws-log-group` header on every request.
 
 ## How it works
 
-1. Reads `x-aws-log-group` and `x-aws-log-stream` headers from the outgoing HTTP request
-2. Optionally overrides them from [`client.Metadata`](https://pkg.go.dev/go.opentelemetry.io/collector/client#Metadata) context keys (for dynamic routing)
-3. Creates the log group and stream via the AWS CloudWatch Logs API if not already cached
-4. Delegates to the inner auth extension (e.g., `sigv4auth`) for request signing
+1. Reads `x-aws-log-group` and `x-aws-log-stream` headers from the outgoing HTTP request (set by the otlphttp exporter or [headers_setter](../../extension/headerssetterextension) extension)
+2. Creates the log group and stream via the AWS CloudWatch Logs API if not already cached
+3. Delegates to the inner auth extension (e.g., `sigv4auth`) for request signing
 
 The extension extracts the AWS region from the request URL (e.g., `https://logs.us-east-1.amazonaws.com` → `us-east-1`).
-
-### Header resolution priority
-
-1. Start with whatever `x-aws-log-group`/`x-aws-log-stream` headers are already on the request (e.g., set by otlphttp exporter static headers)
-2. If `log_group_context_key` is set, override `x-aws-log-group` with the value from `client.Metadata` at that key
-3. If `log_stream_context_key` is set, override `x-aws-log-stream` with the value from `client.Metadata` at that key
-
-This means:
-- **Static case**: No context keys needed. Configure `x-aws-log-group` in the otlphttp exporter headers. The extension just provisions whatever it sees.
-- **Dynamic case**: Set context keys. An upstream processor (e.g., `transform` + `attributestocontext`) populates `client.Metadata` with full log group/stream names, and the extension overrides the headers and provisions.
 
 ## Configuration
 
 | Field | Default | Description |
 |---|---|---|
 | `additional_auth` | (none) | Inner auth extension for request signing (typically `sigv4auth`) |
-| `log_group_context_key` | `""` | Optional `client.Metadata` key to read the log group name from. Overrides the `x-aws-log-group` header. |
-| `log_stream_context_key` | `""` | Optional `client.Metadata` key to read the log stream name from. Overrides the `x-aws-log-stream` header. |
 | `logs_provision_timeout_seconds` | `10` | HTTP timeout per CreateLogGroup/CreateLogStream API call (seconds) |
 | `logs_provision_failure_backoff_seconds` | `30` | TTL for negative cache entries after a creation failure (seconds) |
 
@@ -37,7 +24,7 @@ This means:
 
 ### Dynamic routing (per-service log groups)
 
-Routes OTLP logs to per-service CloudWatch log groups based on the `service.name` resource attribute. The `transform` processor builds the full log group name, the `attributestocontext` processor copies it to `client.Metadata`, and this extension reads it from metadata, creates the log group, and sets the header.
+Routes OTLP logs to per-service CloudWatch log groups based on the `service.name` resource attribute. The `transform` processor builds the full log group name, the `attributestocontext` processor copies it to `client.Metadata`, and the `headers_setter` extension sets the `x-aws-log-group` header from metadata.
 
 ```yaml
 extensions:
@@ -45,10 +32,15 @@ extensions:
     region: us-east-1
     service: logs
 
+  headers_setter:
+    headers:
+      - key: x-aws-log-group
+        from_context: cwlogs.log_group
+      - key: x-aws-log-stream
+        from_context: cwlogs.log_stream
+
   awscloudwatchlogsprovisioner:
-    additional_auth: sigv4auth/logs
-    log_group_context_key: cwlogs.log_group
-    log_stream_context_key: cwlogs.log_stream
+    additional_auth: headers_setter
 
 receivers:
   otlp:
@@ -89,7 +81,7 @@ exporters:
     compression: gzip
 
 service:
-  extensions: [sigv4auth/logs, awscloudwatchlogsprovisioner]
+  extensions: [sigv4auth/logs, headers_setter, awscloudwatchlogsprovisioner]
   pipelines:
     logs:
       receivers: [otlp]

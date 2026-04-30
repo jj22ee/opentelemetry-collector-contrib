@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/collector/client"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/extension/extensionauth"
 	"go.opentelemetry.io/collector/extension/extensioncapabilities"
@@ -169,27 +168,20 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		}
 	})
 
-	req2 := req.Clone(req.Context())
-
-	// Apply context key overrides if configured
-	rt.ext.applyContextOverrides(req2)
-
-	// Read the final header values (may have been set by otlphttp static headers,
-	// headers_setter, or overridden above from context keys)
-	logGroup := req2.Header.Get("x-aws-log-group")
-	logStream := req2.Header.Get("x-aws-log-stream")
+	// Read headers set by the otlphttp exporter (static) or headers_setter (dynamic).
+	logGroup := req.Header.Get("x-aws-log-group")
+	logStream := req.Header.Get("x-aws-log-stream")
 
 	if logGroup != "" {
 		if logStream == "" {
 			logStream = "default"
-			req2.Header.Set("x-aws-log-stream", logStream)
 		}
 
 		if rt.client != nil {
 			rt.ext.ensureProvisioned(rt.client, logGroup, logStream)
 		}
 
-		resp, err := rt.base.RoundTrip(req2)
+		resp, err := rt.base.RoundTrip(req)
 
 		// TODO: Add cache eviction here when the CW OTLP endpoint differentiates
 		// "The specified log group does not exist" from other 400 errors with a
@@ -205,26 +197,6 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 	}
 
 	return rt.base.RoundTrip(req)
-}
-
-// applyContextOverrides reads log group/stream from client.Metadata and sets
-// them as HTTP headers, overriding any existing header values.
-func (e *provisionerExtension) applyContextOverrides(req *http.Request) {
-	cl := client.FromContext(req.Context())
-
-	if e.cfg.LogGroupContextKey != "" {
-		values := cl.Metadata.Get(e.cfg.LogGroupContextKey)
-		if len(values) > 0 && values[0] != "" {
-			req.Header.Set("x-aws-log-group", values[0])
-		}
-	}
-
-	if e.cfg.LogStreamContextKey != "" {
-		values := cl.Metadata.Get(e.cfg.LogStreamContextKey)
-		if len(values) > 0 && values[0] != "" {
-			req.Header.Set("x-aws-log-stream", values[0])
-		}
-	}
 }
 
 // ensureProvisioned creates the log group and stream if not already cached.
