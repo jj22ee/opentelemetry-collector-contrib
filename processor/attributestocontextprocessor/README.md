@@ -20,7 +20,9 @@ processors:
   - `key`: The key to use in the client metadata (required)
   - `from_resource_attribute`: The resource attribute to read the value from (required)
 
-Each action performs an upsert: it sets the metadata key to the resource attribute value, overwriting any existing value for that key.
+Each action performs an upsert: it sets the metadata key to the resource attribute value, overwriting any existing value for that key. If the resource attribute is missing, the metadata key is left unchanged. When a batch contains multiple resource entries, the last value wins.
+
+Existing metadata from upstream processors is preserved for keys not listed in `actions`.
 
 ## Example: Dynamic log group routing
 
