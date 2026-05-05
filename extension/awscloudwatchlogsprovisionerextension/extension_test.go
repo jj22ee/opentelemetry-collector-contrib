@@ -235,6 +235,73 @@ func TestRoundTripper_400OtherError_NoEviction(t *testing.T) {
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "should not re-provision for non-existence 400")
 }
 
+// Test: 400 "does not exist" with a failed cache entry does NOT evict (preserves backoff)
+func TestRoundTripper_400DoesNotExist_FailedEntry_NoEviction(t *testing.T) {
+	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
+	mockClient := &mockCWLogsClient{
+		createStreamErr: notFoundErr,
+		createGroupErr:  fmt.Errorf("access denied"),
+	}
+	ext := newTestExtension(t, &Config{
+		LogsProvisionFailureBackoff: 60 * time.Second,
+	}, mockClient)
+	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
+
+	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
+		}, nil
+	})
+
+	rt, err := ext.RoundTripper(base)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "https://logs.us-east-1.amazonaws.com/v1/logs", nil)
+	req.Header.Set("x-aws-log-group", "/test/group")
+	req.Header.Set("x-aws-log-stream", "default")
+
+	// First call: ensure fails (access denied), caches failure entry
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
+	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
+
+	// Second call: gets 400 "does not exist" but cache has failed entry — should NOT evict
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
+	// Still only 1 group call — backoff preserved, no retry
+	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not evict failed entry")
+}
+
+func TestEvictSuccessfulEntry(t *testing.T) {
+	mockClient := &mockCWLogsClient{}
+	ext := newTestExtension(t, &Config{}, mockClient)
+
+	t.Run("evicts success entry", func(t *testing.T) {
+		ext.cache.Store(cacheKey("/group", "stream"), cacheEntry{success: true})
+		ext.evictSuccessfulEntry("/group", "stream")
+
+		_, loaded := ext.cache.Load(cacheKey("/group", "stream"))
+		assert.False(t, loaded, "success entry should be evicted")
+	})
+
+	t.Run("preserves failed entry", func(t *testing.T) {
+		ext.cache.Store(cacheKey("/group2", "stream"), cacheEntry{
+			success:   false,
+			expiresAt: time.Now().Add(time.Minute),
+		})
+		ext.evictSuccessfulEntry("/group2", "stream")
+
+		_, loaded := ext.cache.Load(cacheKey("/group2", "stream"))
+		assert.True(t, loaded, "failed entry should NOT be evicted")
+	})
+
+	t.Run("no-op when entry missing", func(t *testing.T) {
+		ext.evictSuccessfulEntry("/nonexistent", "stream")
+		// No panic, no-op
+	})
+}
+
 func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)

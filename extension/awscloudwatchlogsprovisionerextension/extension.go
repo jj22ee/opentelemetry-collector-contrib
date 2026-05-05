@@ -148,7 +148,7 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 			body, readErr := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if readErr == nil && strings.Contains(string(body), "does not exist") {
-				rt.ext.evict(logGroup, logStream)
+				rt.ext.evictSuccessfulEntry(logGroup, logStream)
 			}
 			resp.Body = io.NopCloser(strings.NewReader(string(body)))
 		}
@@ -234,6 +234,13 @@ func (e *provisionerExtension) provision(ctx context.Context, logGroup, logStrea
 	return nil
 }
 
-func (e *provisionerExtension) evict(logGroup, logStream string) {
-	e.cache.Delete(cacheKey(logGroup, logStream))
+// evict removes the cache entry only if it was previously successful.
+// Failed entries retain their backoff TTL.
+func (e *provisionerExtension) evictSuccessfulEntry(logGroup, logStream string) {
+	key := cacheKey(logGroup, logStream)
+	if entry, ok := e.cache.Load(key); ok {
+		if entry.(cacheEntry).success {
+			e.cache.Delete(key)
+		}
+	}
 }
