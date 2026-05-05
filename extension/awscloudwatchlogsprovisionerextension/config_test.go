@@ -5,6 +5,7 @@ package awscloudwatchlogsprovisionerextension
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component"
@@ -13,8 +14,8 @@ import (
 func TestConfig_Defaults(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
 
-	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
-	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
+	assert.Equal(t, 10*time.Second, cfg.LogsProvisionTimeout)
+	assert.Equal(t, 30*time.Second, cfg.LogsProvisionFailureBackoff)
 	assert.Nil(t, cfg.AdditionalAuth)
 	assert.Empty(t, cfg.Region)
 }

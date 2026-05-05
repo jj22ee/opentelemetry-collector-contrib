@@ -16,8 +16,8 @@ This extension is designed for use with the `otlphttp` exporter to send logs to 
 |---|---|---|
 | `region` | (required) | AWS region for CloudWatch Logs API calls |
 | `additional_auth` | (none) | Inner auth extension for request signing (typically `sigv4auth`) |
-| `logs_provision_timeout_seconds` | `10` | HTTP timeout per CreateLogGroup/CreateLogStream API call (seconds) |
-| `logs_provision_failure_backoff_seconds` | `30` | TTL for negative cache entries after a creation failure (seconds) |
+| `logs_provision_timeout` | `10s` | HTTP timeout for each CreateLogGroup/CreateLogStream API call |
+| `logs_provision_failure_backoff` | `30s` | TTL for negative cache entries after a creation failure |
 
 ## Examples
 
@@ -135,6 +135,6 @@ service:
 ## Provisioning behavior
 
 - **Singleflight**: Only one API call per (log group, stream) pair. Concurrent requests for the same key block until the first goroutine completes.
-- **Negative cache**: Failed creation attempts are cached for `logs_provision_failure_backoff_seconds`. During this period, the extension skips retries for that key.
-- **Jitter**: A random 0–500ms delay before each creation call mitigates thundering-herd scenarios.
+- **Negative cache**: Failed creation attempts are cached for `logs_provision_failure_backoff`. During this period, the extension skips retries for that key.
+- **Cache eviction**: If the CW OTLP endpoint returns 400 with "does not exist", the cache entry is evicted so the next request re-provisions.
 - **AlreadyExists**: `ResourceAlreadyExistsException` from the API is treated as success.

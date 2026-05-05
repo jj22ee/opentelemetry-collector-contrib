@@ -5,6 +5,7 @@ package awscloudwatchlogsprovisionerextension
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,8 +21,8 @@ func TestNewFactory(t *testing.T) {
 
 func TestCreateDefaultConfig(t *testing.T) {
 	cfg := createDefaultConfig().(*Config)
-	assert.Equal(t, 10, cfg.LogsProvisionTimeoutSeconds)
-	assert.Equal(t, 30, cfg.LogsProvisionFailureBackoffSeconds)
+	assert.Equal(t, 10*time.Second, cfg.LogsProvisionTimeout)
+	assert.Equal(t, 30*time.Second, cfg.LogsProvisionFailureBackoff)
 	assert.Nil(t, cfg.AdditionalAuth)
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }

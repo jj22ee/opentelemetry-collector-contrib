@@ -87,9 +87,6 @@ func newTestExtension(t *testing.T, cfg *Config, mockClient *mockCWLogsClient) *
 		cfg.Region = "us-east-1"
 	}
 	ext := newExtension(zaptest.NewLogger(t), cfg)
-	ext.cwLogsClientFn = func(_ string, _ time.Duration) (cwLogsClient, error) {
-		return mockClient, nil
-	}
 	ext.client = mockClient
 	return ext
 }
@@ -175,22 +172,17 @@ func TestRoundTripper_MissingStream_SkipsProvisioning(t *testing.T) {
 	assert.Equal(t, int32(0), mockClient.streamCalls.Load(), "should not provision when stream header missing")
 }
 
-// Test: 400 with "does not exist" evicts cache and re-provisions
-func TestRoundTripper_400DoesNotExist_EvictsAndReprovisions(t *testing.T) {
+// Test: 400 with "does not exist" evicts cache so next request re-provisions
+func TestRoundTripper_400DoesNotExist_EvictsCache(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	callCount := 0
 	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		callCount++
-		if callCount == 1 {
-			return &http.Response{
-				StatusCode: http.StatusBadRequest,
-				Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
-			}, nil
-		}
-		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(""))}, nil
+		return &http.Response{
+			StatusCode: http.StatusBadRequest,
+			Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
+		}, nil
 	})
 
 	rt, err := ext.RoundTripper(base)
@@ -203,12 +195,17 @@ func TestRoundTripper_400DoesNotExist_EvictsAndReprovisions(t *testing.T) {
 	resp, err := rt.RoundTrip(req)
 	require.NoError(t, err)
 
-	// First provision + re-provision after eviction = 2 stream calls
-	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "should re-provision after 400 eviction")
+	// Only initial provision (no re-ensure after eviction)
+	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Response body should be preserved for the caller
 	body, _ := io.ReadAll(resp.Body)
 	assert.Contains(t, string(body), "does not exist")
+
+	// Cache was evicted — next request will re-provision
+	_, err = rt.RoundTrip(req)
+	require.NoError(t, err)
+	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "second request should re-provision after eviction")
 }
 
 // Test: 400 without "does not exist" does NOT evict cache
@@ -261,7 +258,7 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 		createGroupErr:  fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		LogsProvisionFailureBackoffSeconds: 60,
+		LogsProvisionFailureBackoff: 60 * time.Second,
 	}, mockClient)
 
 	ext.ensure(context.Background(), "/test/group", "default")
@@ -395,7 +392,7 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 		createGroupErr:  fmt.Errorf("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
-		LogsProvisionFailureBackoffSeconds: 1,
+		LogsProvisionFailureBackoff: 1 * time.Second,
 	}, mockClient)
 
 	ext.ensure(context.Background(), "/test/group", "default")

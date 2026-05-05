@@ -5,6 +5,7 @@ package awscloudwatchlogsprovisionerextension // import "github.com/open-telemet
 
 import (
 	"errors"
+	"time"
 
 	"go.opentelemetry.io/collector/component"
 )
@@ -24,20 +25,26 @@ type Config struct {
 	// as headers_setter's additional_auth field.
 	AdditionalAuth *component.ID `mapstructure:"additional_auth"`
 
-	// LogsProvisionTimeoutSeconds is the HTTP timeout for each CreateLogGroup/CreateLogStream
+	// LogsProvisionTimeout is the HTTP timeout for each CreateLogGroup/CreateLogStream
 	// API call (including SDK retries). Bounds how long singleflight waiters block.
-	// Default: 10 seconds.
-	LogsProvisionTimeoutSeconds int `mapstructure:"logs_provision_timeout_seconds,omitempty"`
+	// Default: 10s.
+	LogsProvisionTimeout time.Duration `mapstructure:"logs_provision_timeout"`
 
-	// LogsProvisionFailureBackoffSeconds is the TTL for negative cache entries.
+	// LogsProvisionFailureBackoff is the TTL for negative cache entries.
 	// During this period, the extension won't retry creation for the same (group, stream) pair.
-	// Default: 30 seconds.
-	LogsProvisionFailureBackoffSeconds int `mapstructure:"logs_provision_failure_backoff_seconds,omitempty"`
+	// Default: 30s.
+	LogsProvisionFailureBackoff time.Duration `mapstructure:"logs_provision_failure_backoff"`
 }
 
 func (cfg *Config) Validate() error {
 	if cfg.Region == "" {
 		return errors.New("region is required")
+	}
+	if cfg.LogsProvisionTimeout < 0 {
+		return errors.New("logs_provision_timeout must not be negative")
+	}
+	if cfg.LogsProvisionFailureBackoff < 0 {
+		return errors.New("logs_provision_failure_backoff must not be negative")
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ package awscloudwatchlogsprovisionerextension // import "github.com/open-telemet
 
 import (
 	"context"
+	"time"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension/internal/metadata"
 	"go.opentelemetry.io/collector/component"
@@ -22,8 +23,8 @@ func NewFactory() extension.Factory {
 
 func createDefaultConfig() component.Config {
 	return &Config{
-		LogsProvisionTimeoutSeconds:        10,
-		LogsProvisionFailureBackoffSeconds: 30,
+		LogsProvisionTimeout:        10 * time.Second,
+		LogsProvisionFailureBackoff: 30 * time.Second,
 	}
 }
 

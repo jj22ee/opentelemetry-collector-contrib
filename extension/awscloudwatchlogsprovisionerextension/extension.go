@@ -19,11 +19,6 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-const (
-	defaultProvisionTimeout        = 10 * time.Second
-	defaultProvisionFailureBackoff = 30 * time.Second
-)
-
 var (
 	_ component.Component             = (*provisionerExtension)(nil)
 	_ extensionauth.HTTPClient        = (*provisionerExtension)(nil)
@@ -47,38 +42,24 @@ type provisionerExtension struct {
 
 	// host is stored during Start() for lazy resolution of additional_auth.
 	// Follows the same pattern as headers_setter extension.
-	host           component.Host
-	client         cwLogsClient
-	cwLogsClientFn func(region string, timeout time.Duration) (cwLogsClient, error)
+	host   component.Host
+	client cwLogsClient
 
-	cache          sync.Map
-	sfGroup        singleflight.Group
-	failureBackoff time.Duration
-	provisionTimeout time.Duration
+	cache   sync.Map
+	sfGroup singleflight.Group
 }
 
 func newExtension(logger *zap.Logger, cfg *Config) *provisionerExtension {
-	backoff := defaultProvisionFailureBackoff
-	if cfg.LogsProvisionFailureBackoffSeconds > 0 {
-		backoff = time.Duration(cfg.LogsProvisionFailureBackoffSeconds) * time.Second
-	}
-	timeout := defaultProvisionTimeout
-	if cfg.LogsProvisionTimeoutSeconds > 0 {
-		timeout = time.Duration(cfg.LogsProvisionTimeoutSeconds) * time.Second
-	}
 	return &provisionerExtension{
-		logger:           logger,
-		cfg:              cfg,
-		failureBackoff:   backoff,
-		provisionTimeout: timeout,
-		cwLogsClientFn:   newDefaultCWLogsClient,
+		logger: logger,
+		cfg:    cfg,
 	}
 }
 
 func (e *provisionerExtension) Start(_ context.Context, host component.Host) error {
 	e.host = host
 
-	client, err := e.cwLogsClientFn(e.cfg.Region, e.provisionTimeout)
+	client, err := newDefaultCWLogsClient(e.cfg.Region, e.cfg.LogsProvisionTimeout)
 	if err != nil {
 		return fmt.Errorf("failed to create CW Logs client: %w", err)
 	}
@@ -162,13 +143,12 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		}
 
 		// If the CW OTLP endpoint returns 400 with "does not exist", evict the
-		// cache entry so the next request re-provisions.
+		// cache entry so the next request re-provisions automatically.
 		if resp.StatusCode == http.StatusBadRequest {
 			body, readErr := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if readErr == nil && strings.Contains(string(body), "does not exist") {
 				rt.ext.evict(logGroup, logStream)
-				rt.ext.ensure(req.Context(), logGroup, logStream)
 			}
 			resp.Body = io.NopCloser(strings.NewReader(string(body)))
 		}
@@ -206,11 +186,15 @@ func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream s
 
 		err := e.provision(ctx, logGroup, logStream)
 		if err != nil {
-			e.cache.Store(key, cacheEntry{expiresAt: time.Now().Add(e.failureBackoff)})
+			// Don't cache failures caused by context cancellation — allow retry for provision
+			if ctx.Err() != nil {
+				return nil, nil
+			}
+			e.cache.Store(key, cacheEntry{expiresAt: time.Now().Add(e.cfg.LogsProvisionFailureBackoff)})
 			e.logger.Warn("Failed to create log group/stream",
 				zap.String("logGroup", logGroup),
 				zap.String("logStream", logStream),
-				zap.Duration("backoff", e.failureBackoff),
+				zap.Duration("backoff", e.cfg.LogsProvisionFailureBackoff),
 				zap.Error(err),
 			)
 		} else {
