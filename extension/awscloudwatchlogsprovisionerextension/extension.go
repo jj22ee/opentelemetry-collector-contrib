@@ -152,7 +152,7 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 			if readErr == nil && strings.Contains(string(body), "does not exist") {
 				rt.ext.evictSuccessfulEntry(logGroup, logStream)
 				if wasProvisioned {
-					return nil, fmt.Errorf("log group/stream (that did exist) does not exist, evicted cache for re-provisioning on retry")
+					return nil, fmt.Errorf("destination log group/stream (that did exist) does not exist, evicted cache entry for re-provisioning for next retry")
 				}
 			}
 			resp.Body = io.NopCloser(strings.NewReader(string(body)))
