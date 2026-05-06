@@ -135,7 +135,7 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 	logStream := req.Header.Get("x-aws-log-stream")
 
 	if logGroup != "" && logStream != "" {
-		rt.ext.ensure(req.Context(), logGroup, logStream)
+		wasProvisioned := rt.ext.ensure(req.Context(), logGroup, logStream)
 
 		resp, err := rt.base.RoundTrip(req)
 		if err != nil {
@@ -143,12 +143,17 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 		}
 
 		// If the CW OTLP endpoint returns 400 with "does not exist", evict the
-		// cache entry so the next request re-provisions automatically.
+		// cache entry. If ensure() returned true (log group was previously known
+		// to exist), return an error to trigger the exporter's retry logic — on
+		// retry, ensure() re-provisions the log group/stream.
 		if resp.StatusCode == http.StatusBadRequest {
 			body, readErr := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			if readErr == nil && strings.Contains(string(body), "does not exist") {
 				rt.ext.evictSuccessfulEntry(logGroup, logStream)
+				if wasProvisioned {
+					return nil, fmt.Errorf("log group/stream (that did exist) does not exist, evicted cache for re-provisioning on retry")
+				}
 			}
 			resp.Body = io.NopCloser(strings.NewReader(string(body)))
 		}
@@ -164,14 +169,20 @@ func cacheKey(logGroup, logStream string) string {
 }
 
 // ensure creates the log group and stream if not already cached.
+// Returns true if the log group/stream is known to be provisioned (cache hit on
+// success entry or newly provisioned). Returns false if provisioning failed or
+// is within failure backoff.
 // Uses singleflight to deduplicate concurrent creation attempts for the same key.
-func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream string) {
+func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream string) bool {
 	key := cacheKey(logGroup, logStream)
 
 	if entry, ok := e.cache.Load(key); ok {
 		ce := entry.(cacheEntry)
-		if ce.success || time.Now().Before(ce.expiresAt) {
-			return
+		if ce.success {
+			return true
+		}
+		if time.Now().Before(ce.expiresAt) {
+			return false
 		}
 	}
 
@@ -206,6 +217,12 @@ func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream s
 		}
 		return nil, nil
 	})
+
+	// Check final cache state after singleflight completes.
+	if entry, ok := e.cache.Load(key); ok {
+		return entry.(cacheEntry).success
+	}
+	return false
 }
 
 // provision creates the log stream (and log group if needed).

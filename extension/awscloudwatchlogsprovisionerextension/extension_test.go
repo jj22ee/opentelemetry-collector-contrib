@@ -172,8 +172,8 @@ func TestRoundTripper_MissingStream_SkipsProvisioning(t *testing.T) {
 	assert.Equal(t, int32(0), mockClient.streamCalls.Load(), "should not provision when stream header missing")
 }
 
-// Test: 400 with "does not exist" evicts cache so next request re-provisions
-func TestRoundTripper_400DoesNotExist_EvictsCache(t *testing.T) {
+// Test: 400 with "does not exist" evicts cache and returns error for retry
+func TestRoundTripper_400DoesNotExist_EvictsAndReturnsError(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
@@ -192,20 +192,12 @@ func TestRoundTripper_400DoesNotExist_EvictsCache(t *testing.T) {
 	req.Header.Set("x-aws-log-group", "/test/group")
 	req.Header.Set("x-aws-log-stream", "default")
 
+	// First call: provisions, gets 400, evicts, returns error for retry
 	resp, err := rt.RoundTrip(req)
-	require.NoError(t, err)
-
-	// Only initial provision (no re-ensure after eviction)
+	assert.Nil(t, resp)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "does not exist")
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
-
-	// Response body should be preserved for the caller
-	body, _ := io.ReadAll(resp.Body)
-	assert.Contains(t, string(body), "does not exist")
-
-	// Cache was evicted — next request will re-provision
-	_, err = rt.RoundTrip(req)
-	require.NoError(t, err)
-	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "second request should re-provision after eviction")
 }
 
 // Test: 400 without "does not exist" does NOT evict cache
