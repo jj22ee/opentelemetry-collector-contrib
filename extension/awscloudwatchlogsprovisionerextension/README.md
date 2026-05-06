@@ -31,16 +31,17 @@ extensions:
     region: us-east-1
     service: logs
 
+  awscloudwatchlogsprovisioner:
+    region: us-east-1
+    additional_auth: sigv4auth/logs
+
   headers_setter:
+    additional_auth: awscloudwatchlogsprovisioner
     headers:
       - key: x-aws-log-group
         from_context: cwlogs.log_group
       - key: x-aws-log-stream
         from_context: cwlogs.log_stream
-
-  awscloudwatchlogsprovisioner:
-    region: us-east-1
-    additional_auth: headers_setter
 
 receivers:
   otlp:
@@ -77,11 +78,11 @@ exporters:
     endpoint: https://logs.us-east-1.amazonaws.com
     logs_endpoint: https://logs.us-east-1.amazonaws.com/v1/logs
     auth:
-      authenticator: awscloudwatchlogsprovisioner
+      authenticator: headers_setter
     compression: gzip
 
 service:
-  extensions: [sigv4auth/logs, headers_setter, awscloudwatchlogsprovisioner]
+  extensions: [sigv4auth/logs, awscloudwatchlogsprovisioner, headers_setter]
   pipelines:
     logs:
       receivers: [otlp]
@@ -136,5 +137,5 @@ service:
 
 - **Singleflight**: Only one API call per (log group, stream) pair. Concurrent requests for the same key block until the first goroutine completes.
 - **Negative cache**: Failed creation attempts are cached for `logs_provision_failure_backoff`. During this period, the extension skips retries for that key.
-- **Cache eviction**: If the CW OTLP endpoint returns 400 with "does not exist", the cache entry is evicted so the next request re-provisions.
+- **Cache eviction**: If the CW OTLP endpoint returns 400 with "does not exist" and the cache had a success entry, the entry is evicted and a retryable error is returned — the exporter retries, re-provisions, and delivers the logs.
 - **AlreadyExists**: `ResourceAlreadyExistsException` from the API is treated as success.
