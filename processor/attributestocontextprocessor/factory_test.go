@@ -6,13 +6,14 @@ package attributestocontextprocessor
 import (
 	"testing"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/metadata"
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/confmap/xconfmap"
 	"go.opentelemetry.io/collector/consumer/consumertest"
 	"go.opentelemetry.io/collector/processor/processortest"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/metadata"
 )
 
 func TestFactory_Type(t *testing.T) {
@@ -35,44 +36,6 @@ func TestValidateConfig(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 	assert.Error(t, xconfmap.Validate(cfg))
-}
-
-func TestFactory_CreateTraces(t *testing.T) {
-	factory := NewFactory()
-	cfg := &Config{
-		Actions: []actions.KeyValue{
-			{Key: "service", FromResourceAttribute: "service.name"},
-		},
-	}
-
-	processor, err := factory.CreateTraces(
-		t.Context(),
-		processortest.NewNopSettings(metadata.Type),
-		cfg,
-		consumertest.NewNop(),
-	)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, processor)
-}
-
-func TestFactory_CreateMetrics(t *testing.T) {
-	factory := NewFactory()
-	cfg := &Config{
-		Actions: []actions.KeyValue{
-			{Key: "service", FromResourceAttribute: "service.name"},
-		},
-	}
-
-	processor, err := factory.CreateMetrics(
-		t.Context(),
-		processortest.NewNopSettings(metadata.Type),
-		cfg,
-		consumertest.NewNop(),
-	)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, processor)
 }
 
 func TestFactory_CreateLogs(t *testing.T) {

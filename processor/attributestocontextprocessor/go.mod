@@ -14,6 +14,7 @@ require (
 	go.opentelemetry.io/collector/pdata v1.30.0
 	go.opentelemetry.io/collector/processor v1.30.0
 	go.opentelemetry.io/collector/processor/processortest v0.124.0
+	go.uber.org/goleak v1.3.0
 )
 
 require (
