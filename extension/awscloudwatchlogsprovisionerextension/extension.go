@@ -65,7 +65,8 @@ func (e *provisionerExtension) Start(_ context.Context, host component.Host) err
 	}
 	e.client = client
 
-	e.logger.Info("awscloudwatchlogsprovisioner started",
+	e.logger.Info(
+		"awscloudwatchlogsprovisioner started",
 		zap.String("region", e.cfg.Region),
 	)
 	return nil
@@ -202,7 +203,8 @@ func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream s
 				return nil, nil
 			}
 			e.cache.Store(key, cacheEntry{expiresAt: time.Now().Add(e.cfg.LogsProvisionFailureBackoff)})
-			e.logger.Warn("Failed to create log group/stream",
+			e.logger.Warn(
+				"Failed to create log group/stream",
 				zap.String("logGroup", logGroup),
 				zap.String("logStream", logStream),
 				zap.Duration("backoff", e.cfg.LogsProvisionFailureBackoff),
@@ -210,7 +212,8 @@ func (e *provisionerExtension) ensure(ctx context.Context, logGroup, logStream s
 			)
 		} else {
 			e.cache.Store(key, cacheEntry{success: true})
-			e.logger.Debug("Successfully provisioned log group/stream",
+			e.logger.Debug(
+				"Successfully provisioned log group/stream",
 				zap.String("logGroup", logGroup),
 				zap.String("logStream", logStream),
 			)
@@ -237,7 +240,8 @@ func (e *provisionerExtension) provision(ctx context.Context, logGroup, logStrea
 		return fmt.Errorf("CreateLogStream %q in %q: %w", logStream, logGroup, err)
 	}
 
-	e.logger.Debug("Log group not found, creating",
+	e.logger.Debug(
+		"Log group not found, creating",
 		zap.String("logGroup", logGroup),
 	)
 	if grpErr := e.client.CreateLogGroup(ctx, logGroup); grpErr != nil {

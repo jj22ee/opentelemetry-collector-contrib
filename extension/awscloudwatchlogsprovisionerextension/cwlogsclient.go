@@ -20,7 +20,8 @@ type defaultCWLogsClient struct {
 }
 
 func newDefaultCWLogsClient(region string, timeout time.Duration) (cwLogsClient, error) {
-	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+	cfg, err := awsconfig.LoadDefaultConfig(
+		context.Background(),
 		awsconfig.WithRegion(region),
 		awsconfig.WithHTTPClient(&http.Client{Timeout: timeout}),
 	)

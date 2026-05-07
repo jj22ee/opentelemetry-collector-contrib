@@ -443,7 +443,6 @@ func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	assert.Equal(t, int32(2), mockClient.streamCalls.Load(), "different keys should create independently")
 }
 
-
 func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
