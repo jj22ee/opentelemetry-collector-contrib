@@ -62,10 +62,8 @@ processors:
   attributestocontext:
     actions:
       - key: cwlogs.log_group
-        action: upsert
         from_resource_attribute: cwlogs.log_group
       - key: cwlogs.log_stream
-        action: upsert
         from_resource_attribute: cwlogs.log_stream
 
   batch:
