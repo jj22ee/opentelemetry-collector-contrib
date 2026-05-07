@@ -5,7 +5,7 @@ package awscloudwatchlogsprovisionerextension
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -107,7 +107,7 @@ func TestRoundTripper_StaticHeaders(t *testing.T) {
 	var capturedReq *http.Request
 	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		capturedReq = req
-		return &http.Response{StatusCode: 200}, nil
+		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 
 	rt, err := ext.RoundTripper(base)
@@ -133,8 +133,8 @@ func TestRoundTripper_NoLogGroup_PassesThrough(t *testing.T) {
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 200}, nil
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 
 	rt, err := ext.RoundTripper(base)
@@ -155,8 +155,8 @@ func TestRoundTripper_MissingStream_SkipsProvisioning(t *testing.T) {
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 200}, nil
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 
 	rt, err := ext.RoundTripper(base)
@@ -178,7 +178,7 @@ func TestRoundTripper_400DoesNotExist_EvictsAndReturnsError(t *testing.T) {
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
@@ -206,7 +206,7 @@ func TestRoundTripper_400OtherError_NoEviction(t *testing.T) {
 	ext := newTestExtension(t, &Config{}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       io.NopCloser(strings.NewReader(`{"message":"Invalid log format"}`)),
@@ -232,14 +232,14 @@ func TestRoundTripper_400DoesNotExist_FailedEntry_NoEviction(t *testing.T) {
 	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
 		createStreamErr: notFoundErr,
-		createGroupErr:  fmt.Errorf("access denied"),
+		createGroupErr:  errors.New("access denied"),
 	}
 	ext := newTestExtension(t, &Config{
 		LogsProvisionFailureBackoff: 60 * time.Second,
 	}, mockClient)
 	ext.host = &mockHost{extensions: map[component.ID]component.Component{}}
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       io.NopCloser(strings.NewReader(`{"message":"The specified log group does not exist."}`)),
@@ -288,7 +288,7 @@ func TestEvictSuccessfulEntry(t *testing.T) {
 		assert.True(t, loaded, "failed entry should NOT be evicted")
 	})
 
-	t.Run("no-op when entry missing", func(t *testing.T) {
+	t.Run("no-op when entry missing", func(_ *testing.T) {
 		ext.evictSuccessfulEntry("/nonexistent", "stream")
 		// No panic, no-op
 	})
@@ -298,14 +298,14 @@ func TestEnsureProvisioned_Success(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 
 	// Stream-first: CreateLogStream succeeds, no group creation needed
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load())
 
 	// Second call should hit cache
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load(), "should not create again after cache hit")
 	assert.Equal(t, int32(1), mockClient.streamCalls.Load(), "should not create again after cache hit")
 }
@@ -314,17 +314,17 @@ func TestEnsureProvisioned_FailureThenBackoff(t *testing.T) {
 	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
 		createStreamErr: notFoundErr,
-		createGroupErr:  fmt.Errorf("throttled"),
+		createGroupErr:  errors.New("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
 		LogsProvisionFailureBackoff: 60 * time.Second,
 	}, mockClient)
 
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 	// Stream fails (not found) → group creation attempted → fails (throttled)
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load(), "should not retry during backoff")
 }
 
@@ -337,7 +337,7 @@ func TestEnsureProvisioned_Singleflight(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ext.ensure(context.Background(), "/test/singleflight", "default")
+			ext.ensure(t.Context(), "/test/singleflight", "default")
 		}()
 	}
 	wg.Wait()
@@ -356,7 +356,7 @@ func TestStart_StoresHost(t *testing.T) {
 		},
 	}
 
-	err := ext.Start(context.Background(), host)
+	err := ext.Start(t.Context(), host)
 	require.NoError(t, err)
 	assert.NotNil(t, ext.host)
 }
@@ -367,11 +367,11 @@ func TestRoundTripper_MissingAdditionalAuth(t *testing.T) {
 	ext := newExtension(zaptest.NewLogger(t), cfg)
 
 	host := &mockHost{extensions: map[component.ID]component.Component{}}
-	err := ext.Start(context.Background(), host)
+	err := ext.Start(t.Context(), host)
 	require.NoError(t, err)
 
-	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: 200}, nil
+	base := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 
 	_, err = ext.RoundTripper(base)
@@ -403,7 +403,7 @@ func TestChainingWithAdditionalAuth(t *testing.T) {
 	var capturedReq *http.Request
 	base := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		capturedReq = req
-		return &http.Response{StatusCode: 200}, nil
+		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 
 	rt, err := ext.RoundTripper(base)
@@ -435,8 +435,8 @@ func TestEnsureProvisioned_DifferentKeysIndependent(t *testing.T) {
 	mockClient := &mockCWLogsClient{}
 	ext := newTestExtension(t, &Config{}, mockClient)
 
-	ext.ensure(context.Background(), "/test/service-a", "default")
-	ext.ensure(context.Background(), "/test/service-b", "default")
+	ext.ensure(t.Context(), "/test/service-a", "default")
+	ext.ensure(t.Context(), "/test/service-b", "default")
 
 	// Stream-first: both streams succeed without needing group creation
 	assert.Equal(t, int32(0), mockClient.groupCalls.Load())
@@ -447,17 +447,17 @@ func TestFailureBackoff_ExpiresAndRetries(t *testing.T) {
 	notFoundErr := &types.ResourceNotFoundException{Message: aws.String("not found")}
 	mockClient := &mockCWLogsClient{
 		createStreamErr: notFoundErr,
-		createGroupErr:  fmt.Errorf("throttled"),
+		createGroupErr:  errors.New("throttled"),
 	}
 	ext := newTestExtension(t, &Config{
 		LogsProvisionFailureBackoff: 1 * time.Second,
 	}, mockClient)
 
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 	assert.Equal(t, int32(1), mockClient.groupCalls.Load())
 
 	time.Sleep(1100 * time.Millisecond)
 
-	ext.ensure(context.Background(), "/test/group", "default")
+	ext.ensure(t.Context(), "/test/group", "default")
 	assert.Equal(t, int32(2), mockClient.groupCalls.Load(), "should retry after backoff expires")
 }

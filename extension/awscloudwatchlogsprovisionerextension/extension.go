@@ -5,6 +5,7 @@ package awscloudwatchlogsprovisionerextension // import "github.com/open-telemet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -153,7 +154,7 @@ func (rt *provisionerRoundTripper) RoundTrip(req *http.Request) (*http.Response,
 			if readErr == nil && strings.Contains(string(body), "does not exist") {
 				rt.ext.evictSuccessfulEntry(logGroup, logStream)
 				if wasProvisioned {
-					return nil, fmt.Errorf("destination log group/stream (that did exist) does not exist, evicted cache entry for re-provisioning for next retry")
+					return nil, errors.New("destination log group/stream (that did exist) does not exist, evicted cache entry for re-provisioning for next retry")
 				}
 			}
 			resp.Body = io.NopCloser(strings.NewReader(string(body)))
