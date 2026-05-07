@@ -43,6 +43,21 @@ func TestProcessResource_OverwritesExisting(t *testing.T) {
 	assert.Equal(t, []string{"new-service"}, metadata["service"])
 }
 
+func TestProcessResource_KeyNormalizedToLowercase(t *testing.T) {
+	a := NewActions([]KeyValue{
+		{Key: "CWLogs.Log_Group", FromResourceAttribute: "cwlogs.log_group"},
+	})
+
+	attrs := pcommon.NewMap()
+	attrs.PutStr("cwlogs.log_group", "/my/group")
+
+	metadata := make(map[string][]string)
+	a.ProcessResource(metadata, attrs)
+
+	assert.Equal(t, []string{"/my/group"}, metadata["cwlogs.log_group"])
+	assert.Empty(t, metadata["CWLogs.Log_Group"], "original casing should not exist")
+}
+
 func TestProcessResource_MissingAttribute(t *testing.T) {
 	a := NewActions([]KeyValue{
 		{Key: "missing", FromResourceAttribute: "not.found"},

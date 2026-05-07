@@ -50,27 +50,28 @@ processors:
       - cwlogs.log_stream
 
 extensions:
+  sigv4auth/logs:
+    region: us-east-1
+    service: logs
+
   headers_setter:
+    additional_auth: sigv4auth/logs
     headers:
       - key: x-aws-log-group
         from_context: cwlogs.log_group
       - key: x-aws-log-stream
         from_context: cwlogs.log_stream
 
-  awscloudwatchlogsprovisioner:
-    region: us-east-1
-    additional_auth: headers_setter
-
 exporters:
   otlphttp/cw-logs:
     endpoint: https://logs.us-east-1.amazonaws.com
     logs_endpoint: https://logs.us-east-1.amazonaws.com/v1/logs
     auth:
-      authenticator: awscloudwatchlogsprovisioner
+      authenticator: headers_setter
     compression: gzip
 
 service:
-  extensions: [sigv4auth/logs, headers_setter, awscloudwatchlogsprovisioner]
+  extensions: [sigv4auth/logs, headers_setter]
   pipelines:
     logs:
       receivers: [otlp]
