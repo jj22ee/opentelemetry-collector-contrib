@@ -57,10 +57,10 @@ func newExtension(logger *zap.Logger, cfg *Config) *provisionerExtension {
 	}
 }
 
-func (e *provisionerExtension) Start(_ context.Context, host component.Host) error {
+func (e *provisionerExtension) Start(ctx context.Context, host component.Host) error {
 	e.host = host
 
-	client, err := newDefaultCWLogsClient(e.cfg.Region, e.cfg.LogsProvisionTimeout)
+	client, err := newDefaultCWLogsClient(ctx, e.cfg.Region, e.cfg.LogsProvisionTimeout)
 	if err != nil {
 		return fmt.Errorf("failed to create CW Logs client: %w", err)
 	}
@@ -84,39 +84,34 @@ func (e *provisionerExtension) Dependencies() []component.ID {
 	return nil
 }
 
-// getAdditionalAuthExtension lazily resolves the additional_auth extension
-// from the host. Follows the same pattern as headers_setter:
+// getAdditionalAuthExtension retrieves the configured additional auth extension if present.
+// Returns nil if no additional auth is configured.
+// Follows the same pattern as headers_setter:
 // https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.150.0/extension/headerssetterextension/extension.go
-func (e *provisionerExtension) getAdditionalAuthExtension() (extensionauth.HTTPClient, error) {
-	if e.cfg.AdditionalAuth == nil {
+func (e *provisionerExtension) getAdditionalAuthExtension() (component.Component, error) {
+	if e.cfg.AdditionalAuth == nil || e.host == nil {
 		return nil, nil
 	}
-
-	ext, ok := e.host.GetExtensions()[*e.cfg.AdditionalAuth]
-	if !ok {
-		return nil, fmt.Errorf("additional_auth extension %q not found", e.cfg.AdditionalAuth)
+	ext := e.host.GetExtensions()[*e.cfg.AdditionalAuth]
+	if ext == nil {
+		return nil, fmt.Errorf("additional_auth extension %v not found", e.cfg.AdditionalAuth)
 	}
-
-	httpClient, ok := ext.(extensionauth.HTTPClient)
-	if !ok {
-		return nil, fmt.Errorf("additional_auth extension %q does not implement HTTPClient", e.cfg.AdditionalAuth)
-	}
-
-	return httpClient, nil
+	return ext, nil
 }
 
 func (e *provisionerExtension) RoundTripper(base http.RoundTripper) (http.RoundTripper, error) {
 	transport := base
 
-	// Chain with additional_auth (e.g., sigv4auth) if configured.
-	additionalAuth, err := e.getAdditionalAuthExtension()
+	ext, err := e.getAdditionalAuthExtension()
 	if err != nil {
 		return nil, err
 	}
-	if additionalAuth != nil {
-		transport, err = additionalAuth.RoundTripper(base)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get additional_auth RoundTripper: %w", err)
+	if ext != nil {
+		if httpClient, ok := ext.(extensionauth.HTTPClient); ok {
+			transport, err = httpClient.RoundTripper(base)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get RoundTripper from %v: %w", e.cfg.AdditionalAuth, err)
+			}
 		}
 	}
 

@@ -40,8 +40,8 @@ func (cfg *Config) Validate() error {
 	if cfg.Region == "" {
 		return errors.New("region is required")
 	}
-	if cfg.LogsProvisionTimeout < 0 {
-		return errors.New("logs_provision_timeout must not be negative")
+	if cfg.LogsProvisionTimeout <= 0 {
+		return errors.New("logs_provision_timeout must be positive")
 	}
 	if cfg.LogsProvisionFailureBackoff < 0 {
 		return errors.New("logs_provision_failure_backoff must not be negative")

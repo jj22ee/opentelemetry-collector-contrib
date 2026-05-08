@@ -19,9 +19,9 @@ type defaultCWLogsClient struct {
 	svc *cloudwatchlogs.Client
 }
 
-func newDefaultCWLogsClient(region string, timeout time.Duration) (cwLogsClient, error) {
+func newDefaultCWLogsClient(ctx context.Context, region string, timeout time.Duration) (cwLogsClient, error) {
 	cfg, err := awsconfig.LoadDefaultConfig(
-		context.Background(),
+		ctx,
 		awsconfig.WithRegion(region),
 		awsconfig.WithHTTPClient(&http.Client{Timeout: timeout}),
 	)
