@@ -8,7 +8,7 @@ import (
 
 var (
 	Type      = component.MustNewType("awscloudwatchlogsprovisioner")
-	ScopeName = "github.com/open-telemetry/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension"
+	ScopeName = "github.com/amazon-contributing/opentelemetry-collector-contrib/extension/awscloudwatchlogsprovisionerextension"
 )
 
 const (

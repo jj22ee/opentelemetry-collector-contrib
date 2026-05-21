@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package attributestocontextprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
+package attributestocontextprocessor // import "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/processor"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
 )
 
 type logsProcessor struct {

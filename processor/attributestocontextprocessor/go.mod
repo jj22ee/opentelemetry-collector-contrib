@@ -1,4 +1,4 @@
-module github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor
+module github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor
 
 go 1.24.13
 

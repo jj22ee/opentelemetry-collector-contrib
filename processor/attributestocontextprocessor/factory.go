@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package attributestocontextprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
+package attributestocontextprocessor // import "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/processor"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/metadata"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/metadata"
 )
 
 func NewFactory() processor.Factory {

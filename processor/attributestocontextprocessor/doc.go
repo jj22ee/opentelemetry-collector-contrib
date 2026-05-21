@@ -4,4 +4,4 @@
 //go:generate mdatagen metadata.yaml
 
 // Package attributestocontextprocessor copies resource attributes into client.Metadata.
-package attributestocontextprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
+package attributestocontextprocessor // import "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor"

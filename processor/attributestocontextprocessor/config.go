@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package attributestocontextprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
+package attributestocontextprocessor // import "github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor"
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
+	"github.com/amazon-contributing/opentelemetry-collector-contrib/processor/attributestocontextprocessor/internal/actions"
 )
 
 type ActionKeyValue = actions.KeyValue
