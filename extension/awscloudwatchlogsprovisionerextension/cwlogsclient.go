@@ -6,10 +6,10 @@ package awscloudwatchlogsprovisionerextension // import "github.com/open-telemet
 import (
 	"context"
 	"errors"
-	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -20,10 +20,15 @@ type defaultCWLogsClient struct {
 }
 
 func newDefaultCWLogsClient(ctx context.Context, region string, timeout time.Duration) (cwLogsClient, error) {
+	// Use the SDK's BuildableClient (not a plain *http.Client) so the SDK can
+	// inject custom root CAs from AWS_CA_BUNDLE via WithTransportOptions. This is
+	// required in ISO/ADC/ITAR partitions where a different CA trust store is used.
+	httpClient := awshttp.NewBuildableClient().WithTimeout(timeout)
+
 	cfg, err := awsconfig.LoadDefaultConfig(
 		ctx,
 		awsconfig.WithRegion(region),
-		awsconfig.WithHTTPClient(&http.Client{Timeout: timeout}),
+		awsconfig.WithHTTPClient(httpClient),
 	)
 	if err != nil {
 		return nil, err
